@@ -41,6 +41,7 @@
       { "type": "file-content", "params": { "path": "config.txt", "contains": "debug: false", "notContains": "SECRET" } },
       { "type": "file-exists", "params": { "path": "readme.txt" } },
       { "type": "commit-count", "params": { "min": 5 } },
+      { "type": "commit-message-contains", "params": { "message": "revert" } },
       { "type": "staging-empty", "params": {} }
     ]
   },

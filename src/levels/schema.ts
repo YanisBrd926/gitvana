@@ -57,7 +57,9 @@ export interface ValidatorConfig {
     | 'commit-message-contains'
     | 'merge-commit-exists'
     | 'no-conflicts'
-    | 'tag-exists';
+    | 'tag-exists'
+    | 'no-merge-commits'
+    | 'file-not-exists';
   params: Record<string, unknown>;
 }
 

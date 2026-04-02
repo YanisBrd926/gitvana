@@ -70,6 +70,7 @@
       { "type": "file-content", "params": { "path": "api.txt", "contains": "redis" } },
       { "type": "file-content", "params": { "path": "frontend.txt", "contains": "redux" } },
       { "type": "commit-count", "params": { "min": 6 } },
+      { "type": "no-merge-commits", "params": {} },
       { "type": "staging-empty", "params": {} }
     ]
   },

@@ -33,7 +33,10 @@
   "targetState": {
     "validators": [
       { "type": "branch-exists", "params": { "name": "docs" } },
+      { "type": "head-at", "params": { "branch": "docs" } },
       { "type": "file-exists", "params": { "path": "README.txt" } },
+      { "type": "file-not-exists", "params": { "path": "app.txt" } },
+      { "type": "file-not-exists", "params": { "path": "config.txt" } },
       { "type": "commit-count", "params": { "min": 2 } },
       { "type": "staging-empty", "params": {} }
     ]

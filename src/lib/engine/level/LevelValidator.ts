@@ -46,6 +46,10 @@ export class LevelValidator {
           return await this.validateBranchDeleted(validator);
         case 'tag-exists':
           return await this.validateTagExists(validator);
+        case 'no-merge-commits':
+          return await this.validateNoMergeCommits(validator);
+        case 'file-not-exists':
+          return await this.validateFileNotExists(validator);
         default:
           return { validator, passed: false, message: `Unknown validator: ${validator.type}` };
       }
@@ -161,22 +165,51 @@ export class LevelValidator {
   private async validateCommitCount(
     validator: ValidatorConfig,
   ): Promise<{ validator: ValidatorConfig; passed: boolean; message: string }> {
-    const params = validator.params as { branch?: string; count?: number; min?: number };
+    const params = validator.params as { branch?: string; count?: number; min?: number; max?: number };
     const branch = params.branch;
-    const required = params.count ?? params.min ?? 0;
 
     try {
       const ref = branch || 'HEAD';
       const commits = await git.log({ fs: this.engine.fs, dir: this.engine.dir, ref });
-      const match = commits.length >= required;
+
+      // Exact count check (when count is provided without min)
+      if (params.count !== undefined && params.min === undefined) {
+        const match = commits.length === params.count;
+        return {
+          validator,
+          passed: match,
+          message: match
+            ? `${commits.length} commits (exactly ${params.count})`
+            : `${commits.length} commits, need exactly ${params.count}`,
+        };
+      }
+
+      // Min check
+      const required = params.min ?? 0;
+      if (commits.length < required) {
+        return {
+          validator,
+          passed: false,
+          message: `Only ${commits.length} commits, need at least ${required}`,
+        };
+      }
+
+      // Max check
+      if (params.max !== undefined && commits.length > params.max) {
+        return {
+          validator,
+          passed: false,
+          message: `${commits.length} commits, need at most ${params.max}`,
+        };
+      }
+
       return {
         validator,
-        passed: match,
-        message: match
-          ? `${commits.length} commits (need ${required})`
-          : `Only ${commits.length} commits, need ${required}`,
+        passed: true,
+        message: `${commits.length} commits (need ${required}${params.max !== undefined ? `-${params.max}` : '+'})`,
       };
     } catch {
+      const required = params.count ?? params.min ?? 0;
       return { validator, passed: required === 0, message: `Need ${required} commit${required === 1 ? '' : 's'}` };
     }
   }
@@ -296,6 +329,36 @@ export class LevelValidator {
       };
     } catch {
       return { validator, passed: true, message: `Branch '${name}' deleted` };
+    }
+  }
+
+  private async validateNoMergeCommits(
+    validator: ValidatorConfig,
+  ): Promise<{ validator: ValidatorConfig; passed: boolean; message: string }> {
+    const params = validator.params as { branch?: string };
+    try {
+      const ref = params.branch || 'HEAD';
+      const commits = await git.log({ fs: this.engine.fs, dir: this.engine.dir, ref, depth: 50 });
+      const mergeCommit = commits.find((c) => c.commit.parent.length >= 2);
+      if (mergeCommit) {
+        return { validator, passed: false, message: `Found merge commit: "${mergeCommit.commit.message.trim()}"` };
+      }
+      return { validator, passed: true, message: 'No merge commits — history is linear' };
+    } catch {
+      return { validator, passed: true, message: 'No merge commits' };
+    }
+  }
+
+  private async validateFileNotExists(
+    validator: ValidatorConfig,
+  ): Promise<{ validator: ValidatorConfig; passed: boolean; message: string }> {
+    const { path } = validator.params as { path: string };
+    const fullPath = `${this.engine.dir}/${path}`;
+    try {
+      await this.engine.fs.promises.stat(fullPath);
+      return { validator, passed: false, message: `File '${path}' should not exist` };
+    } catch {
+      return { validator, passed: true, message: `File '${path}' does not exist (correct)` };
     }
   }
 

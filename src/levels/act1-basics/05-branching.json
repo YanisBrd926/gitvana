@@ -33,6 +33,8 @@
       { "type": "branch-exists", "params": { "name": "feature-a" } },
       { "type": "branch-exists", "params": { "name": "feature-b" } },
       { "type": "commit-count", "params": { "min": 2 } },
+      { "type": "commit-count", "params": { "branch": "feature-a", "min": 2 } },
+      { "type": "commit-count", "params": { "branch": "feature-b", "min": 2 } },
       { "type": "head-at", "params": { "branch": "main" } }
     ]
   },

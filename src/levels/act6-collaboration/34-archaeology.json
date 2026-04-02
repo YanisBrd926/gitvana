@@ -70,12 +70,17 @@
   "targetState": {
     "validators": [
       { "type": "branch-exists", "params": { "name": "recovered" } },
+      { "type": "head-at", "params": { "branch": "recovered" } },
       { "type": "file-exists", "params": { "path": "artifact1.txt" } },
       { "type": "file-exists", "params": { "path": "artifact2.txt" } },
       { "type": "file-exists", "params": { "path": "artifact3.txt" } },
+      { "type": "file-not-exists", "params": { "path": "mistake1.txt" } },
+      { "type": "file-not-exists", "params": { "path": "mistake2.txt" } },
+      { "type": "file-not-exists", "params": { "path": "proto1.txt" } },
       { "type": "file-content", "params": { "path": "artifact1.txt", "contains": "Golden Keyboard" } },
       { "type": "file-content", "params": { "path": "artifact2.txt", "contains": "Silver Mouse" } },
       { "type": "file-content", "params": { "path": "artifact3.txt", "contains": "Bronze Monitor" } },
+      { "type": "commit-count", "params": { "branch": "recovered", "min": 5 } },
       { "type": "staging-empty", "params": {} }
     ]
   },

@@ -113,19 +113,18 @@ const solutions: Record<string, string[]> = {
     'git commit -m "Add .gitignore to prevent secrets"',
   ],
   'act3-18-boss': [
-    // Feature branch has: Add new feature, WIP feature stuff, Add db config (.secret), Complete feature, Fix critical production bug
-    // 1. Save reference to feature tip for cherry-picking the hotfix commit later
-    'git log --oneline',
-    // 2. Cherry-pick the last commit (hotfix) to the hotfix branch
+    // Feature branch has (from base): Add new feature, WIP feature stuff, Add db config (.secret), Complete feature, Fix critical production bug
+    // 1. Save reference to feature tip for cherry-picking
     'git branch feature-backup',
+    // 2. Cherry-pick the last commit (hotfix) to the hotfix branch
     'git checkout hotfix',
     'git cherry-pick feature-backup',
-    // 3. Go back to feature and clean up: remove last 3 commits (hotfix, secret, complete feature keep the last good one)
+    // 3. Go back to feature and reset to the initial commit (before all feature commits)
     'git checkout feature',
-    'git reset --hard HEAD~1',
-    'git reset --hard HEAD~1',
-    // 4. Squash WIP into the feature commit
-    'git reset --soft HEAD~1',
+    'git reset --hard HEAD~5',
+    // 4. Create clean feature commit with final content (squashes good work, skips WIP/.secret)
+    'echo "new feature code\\nmore feature code\\nfinal feature" > feature.txt',
+    'git add feature.txt',
     'git commit -m "Add complete feature"',
     // 5. Rebase onto main
     'git rebase main',

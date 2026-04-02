@@ -36,7 +36,10 @@
   "targetState": {
     "validators": [
       { "type": "file-exists", "params": { "path": "treasure.txt" } },
-      { "type": "branch-exists", "params": { "name": "recovered" } }
+      { "type": "file-content", "params": { "path": "treasure.txt", "contains": "You found it!" } },
+      { "type": "branch-exists", "params": { "name": "recovered" } },
+      { "type": "head-at", "params": { "branch": "recovered" } },
+      { "type": "commit-count", "params": { "min": 2 } }
     ]
   },
   "constraints": {

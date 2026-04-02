@@ -53,6 +53,8 @@
     "validators": [
       { "type": "file-content", "params": { "path": "test.txt", "contains": "PASS" } },
       { "type": "commit-count", "params": { "min": 9 } },
+      { "type": "commit-message-contains", "params": { "message": "revert" } },
+      { "type": "head-at", "params": { "branch": "main" } },
       { "type": "staging-empty", "params": {} }
     ]
   },

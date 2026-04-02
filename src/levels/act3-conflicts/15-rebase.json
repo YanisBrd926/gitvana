@@ -46,6 +46,7 @@
     "validators": [
       { "type": "head-at", "params": { "ref": "main" } },
       { "type": "commit-count", "params": { "min": 5 } },
+      { "type": "no-merge-commits", "params": {} },
       { "type": "staging-empty", "params": {} },
       { "type": "file-exists", "params": { "path": "feature.txt" } },
       { "type": "file-exists", "params": { "path": "hotfix.txt" } }

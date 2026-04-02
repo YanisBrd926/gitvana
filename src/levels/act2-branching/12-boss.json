@@ -55,7 +55,10 @@
       { "type": "file-exists", "params": { "path": "api.txt" } },
       { "type": "file-exists", "params": { "path": "login.txt" } },
       { "type": "file-exists", "params": { "path": "style.css" } },
+      { "type": "file-not-exists", "params": { "path": "db.txt" } },
+      { "type": "file-not-exists", "params": { "path": "fonts.txt" } },
       { "type": "file-content", "params": { "path": "app.txt", "contains": "Monastery App" } },
+      { "type": "head-at", "params": { "branch": "main" } },
       { "type": "staging-empty", "params": {} }
     ]
   },

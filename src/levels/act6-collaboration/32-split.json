@@ -38,10 +38,11 @@
   },
   "targetState": {
     "validators": [
-      { "type": "commit-count", "params": { "min": 4 } },
+      { "type": "commit-count", "params": { "min": 4, "max": 4 } },
       { "type": "commit-message-contains", "params": { "text": "Refactor:" } },
       { "type": "commit-message-contains", "params": { "text": "Feature:" } },
       { "type": "commit-message-contains", "params": { "text": "Fix:" } },
+      { "type": "commit-message-contains", "params": { "notMessage": "Mixed" } },
       { "type": "file-exists", "params": { "path": "app.txt" } },
       { "type": "file-exists", "params": { "path": "utils.txt" } },
       { "type": "file-exists", "params": { "path": "feature.txt" } },

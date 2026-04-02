@@ -75,6 +75,7 @@
       { "type": "file-content", "params": { "path": "modules.txt", "contains": "garden" } },
       { "type": "file-content", "params": { "path": "modules.txt", "contains": "network" } },
       { "type": "commit-message-contains", "params": { "text": "network module" } },
+      { "type": "commit-message-contains", "params": { "notMessage": "netwerk" } },
       { "type": "commit-count", "params": { "min": 7 } },
       { "type": "staging-empty", "params": {} }
     ]

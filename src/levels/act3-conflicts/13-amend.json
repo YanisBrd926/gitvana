@@ -28,7 +28,7 @@
   },
   "targetState": {
     "validators": [
-      { "type": "commit-count", "params": { "count": 1 } },
+      { "type": "commit-count", "params": { "min": 1, "max": 1 } },
       { "type": "commit-message-contains", "params": { "message": "Initial setup" } },
       { "type": "file-exists", "params": { "path": "readme.md" } },
       { "type": "file-content", "params": { "path": "app.js", "notContains": "debug" } },

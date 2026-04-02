@@ -54,7 +54,13 @@
     "validators": [
       { "type": "head-at", "params": { "ref": "main" } },
       { "type": "staging-empty", "params": {} },
-      { "type": "commit-count", "params": { "min": 4 } }
+      { "type": "commit-count", "params": { "min": 4 } },
+      { "type": "file-exists", "params": { "path": "feature.txt" } },
+      { "type": "file-exists", "params": { "path": "hotfix-patch.txt" } },
+      { "type": "file-not-exists", "params": { "path": ".secret" } },
+      { "type": "file-content", "params": { "path": "feature.txt", "contains": "final feature" } },
+      { "type": "commit-message-contains", "params": { "notMessage": "WIP" } },
+      { "type": "commit-message-contains", "params": { "notMessage": "db config" } }
     ]
   },
   "constraints": {

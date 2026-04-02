@@ -68,6 +68,10 @@
       { "type": "file-exists", "params": { "path": "export.txt" } },
       { "type": "file-content", "params": { "path": "search.txt", "contains": "paginated" } },
       { "type": "file-content", "params": { "path": "export.txt", "contains": "csv" } },
+      { "type": "file-not-exists", "params": { "path": "experiment1.txt" } },
+      { "type": "file-not-exists", "params": { "path": "experiment2.txt" } },
+      { "type": "file-not-exists", "params": { "path": "debug.txt" } },
+      { "type": "file-not-exists", "params": { "path": "debug2.txt" } },
       { "type": "commit-count", "params": { "min": 5 } },
       { "type": "staging-empty", "params": {} }
     ]

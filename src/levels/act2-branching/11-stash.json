@@ -33,7 +33,9 @@
     "validators": [
       { "type": "branch-exists", "params": { "name": "bugfix" } },
       { "type": "commit-count", "params": { "min": 2 } },
+      { "type": "commit-count", "params": { "branch": "bugfix", "min": 2 } },
       { "type": "file-content", "params": { "path": "app.txt", "contains": "new feature WIP" } },
+      { "type": "head-at", "params": { "branch": "main" } },
       { "type": "staging-empty", "params": {} }
     ]
   },
