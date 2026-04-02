@@ -15,6 +15,7 @@
   import type { LevelDefinition } from '../../levels/schema.js';
 
   import { soundManager } from '../../lib/audio/SoundManager.js';
+  import { eventBus } from '../../lib/engine/events/GameEventBus.js';
 
   interface Props {
     onEditRequest?: (filepath: string) => void;
@@ -35,6 +36,13 @@
     soundManager.setEnabled(soundEnabled);
     localStorage.setItem(SOUND_KEY, String(soundEnabled));
     if (soundEnabled) soundManager.play('hint');
+  }
+
+  async function handleUndo() {
+    const restored = await gitEngine.restoreSnapshot();
+    if (restored) {
+      eventBus.emit('state:changed', undefined as never);
+    }
   }
 
   let { onEditRequest, onDocRequest, onAbout, onRestart, level, onSkip, playerName }: Props = $props();
@@ -122,6 +130,7 @@
       <button class="header-btn" onclick={toggleSound} title={soundEnabled ? 'Mute' : 'Unmute'}>
         {soundEnabled ? '🔊' : '🔇'}
       </button>
+      <button class="header-btn" onclick={handleUndo} title="Undo last command">↶</button>
       <button class="header-btn" onclick={() => onRestart?.()} title="Restart level">↺</button>
       <button class="header-btn" onclick={() => onAbout?.()} title="About">?</button>
       <a class="header-btn" href="#/docs" title="Docs">DOCS</a>

@@ -51,6 +51,8 @@ export class GitEngine {
   private commandCount = 0;
   stashStack: StashEntry[] = [];
   reflogEntries: ReflogEntry[] = [];
+  private snapshots: { files: Map<string, string | Uint8Array>; reflog: ReflogEntry[]; stash: StashEntry[] }[] = [];
+  private readonly MAX_SNAPSHOTS = 10;
 
   constructor() {
     this.createFreshFs();
@@ -134,6 +136,9 @@ export class GitEngine {
         success: false,
       };
     }
+
+    // Save snapshot before executing git command (for undo)
+    await this.saveSnapshot();
 
     // Capture previous branch for checkout reflog messages
     let prevBranch: string | null = null;
@@ -343,6 +348,61 @@ export class GitEngine {
     }
   }
 
+  async saveSnapshot(): Promise<void> {
+    const files = new Map<string, string | Uint8Array>();
+    await this.walkDir(this.dir, files);
+    this.snapshots.push({
+      files,
+      reflog: [...this.reflogEntries],
+      stash: [...this.stashStack],
+    });
+    if (this.snapshots.length > this.MAX_SNAPSHOTS) {
+      this.snapshots.shift();
+    }
+  }
+
+  async restoreSnapshot(): Promise<boolean> {
+    if (this.snapshots.length === 0) return false;
+    const snapshot = this.snapshots.pop()!;
+    // Wipe current fs and restore
+    this.createFreshFs();
+    await this.fs.promises.mkdir(this.dir);
+    for (const [path, content] of snapshot.files) {
+      // Ensure parent dirs exist
+      const parts = path.split('/');
+      let dir = '';
+      for (let i = 0; i < parts.length - 1; i++) {
+        dir += '/' + parts[i];
+        try { await this.fs.promises.mkdir(dir); } catch {}
+      }
+      await this.fs.promises.writeFile('/' + path, content);
+    }
+    this.reflogEntries = snapshot.reflog;
+    this.stashStack = snapshot.stash;
+    return true;
+  }
+
+  getSnapshotCount(): number {
+    return this.snapshots.length;
+  }
+
+  private async walkDir(dir: string, files: Map<string, string | Uint8Array>): Promise<void> {
+    const entries = await this.fs.promises.readdir(dir) as string[];
+    for (const entry of entries) {
+      const fullPath = `${dir}/${entry}`;
+      try {
+        const stat = await this.fs.promises.stat(fullPath);
+        if (stat.isDirectory?.() || (stat as any).type === 'dir') {
+          await this.walkDir(fullPath, files);
+        } else {
+          const content = await this.fs.promises.readFile(fullPath);
+          // Store path relative to root (remove leading /)
+          files.set(fullPath.slice(1), content as string);
+        }
+      } catch {}
+    }
+  }
+
   /** Reset the engine to a clean state, wiping filesystem and all in-memory state. */
   async reset(): Promise<void> {
     this.createFreshFs();
@@ -351,6 +411,7 @@ export class GitEngine {
     this.allowedCommands = null;
     this.stashStack = [];
     this.reflogEntries = [];
+    this.snapshots = [];
     // Note: bisect and rebase state files live inside .git/ which is wiped by
     // createFreshFs(), so no explicit cleanup is needed here.
   }

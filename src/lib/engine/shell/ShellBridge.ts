@@ -189,7 +189,7 @@ export class ShellBridge {
 
   private static readonly BUILTINS = [
     'git', 'ls', 'cat', 'echo', 'touch', 'mkdir', 'rm', 'pwd',
-    'clear', 'edit', 'help', 'hint', 'docs', 'solution', 'solve', 'skip',
+    'clear', 'edit', 'help', 'hint', 'docs', 'solution', 'solve', 'skip', 'undo',
   ];
 
   private static readonly FILE_ARG_COMMANDS = ['add', 'cat', 'edit', 'rm', 'touch'];
@@ -423,6 +423,14 @@ export class ShellBridge {
           await this.autoSolve();
         } else if (parsed.command === 'skip') {
           this.skipLevel();
+        } else if (parsed.command === 'undo') {
+          const restored = await this.engine.restoreSnapshot();
+          if (restored) {
+            this.writeLine('\x1b[33mUndo: restored to before last command.\x1b[0m');
+            eventBus.emit('state:changed', undefined as never);
+          } else {
+            this.writeLine('Nothing to undo.');
+          }
         } else if (parsed.command === 'restart') {
           this.restartLevel();
         } else {
@@ -493,6 +501,7 @@ export class ShellBridge {
       '  \x1b[36mhelp\x1b[0m             You are here',
       '  \x1b[36mhint\x1b[0m             Ask the monks for guidance',
       '  \x1b[36mdocs\x1b[0m [cmd]       Read the monastery scrolls',
+      '  \x1b[36mundo\x1b[0m              Undo the last git command',
       '  \x1b[36mrestart\x1b[0m          Start this level over',
       ...((import.meta.env.DEV || import.meta.env.VITE_DEV_TOOLS === 'true') ? [
         '',
