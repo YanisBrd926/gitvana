@@ -8,40 +8,152 @@
   "mode": "strict",
   "briefing": {
     "narrative": "The monastery quartermaster bursts into the scriptorium, wild-eyed. \"Someone has RUINED the price list! Bread was 10 coins and now it says 1000! The kitchen monks are in open revolt!\"\n\nHe slams the ledger on your desk. \"The price list has been changed across four commits. You need to find which commit introduced the bug, fix the file so bread is back to 10 coins, and commit the fix.\"\n\nThe monastery cat sits on the price list. It does not care about bread prices. It eats fish.",
-    "concept": "git log shows the history of all commits — who changed what and when. git diff lets you compare changes between commits. Together, they're your detective toolkit. When something breaks, you can trace through history to find exactly when and where the problem was introduced.",
+    "concept": "git log shows the history of all commits \u2014 who changed what and when. git diff lets you compare changes between commits. Together, they're your detective toolkit. When something breaks, you can trace through history to find exactly when and where the problem was introduced.",
     "objectives": [
       "Use 'git log' to examine the commit history",
       "Find the commit that changed bread from 10 to 1000",
       "Fix prices.txt so bread is back to 10",
       "Commit the fix with a message containing 'Fix'"
     ],
-    "newCommands": ["git log", "git log --oneline", "git diff <ref>"]
+    "newCommands": [
+      "git log",
+      "git log --oneline",
+      "git diff <ref>"
+    ]
   },
   "initialState": {
     "strategy": "replay",
     "replayScript": [
-      { "command": "init", "args": {} },
-      { "command": "writeFile", "args": { "path": "prices.txt", "content": "bread: 10\nmilk: 5\neggs: 3" } },
-      { "command": "add", "args": { "path": "prices.txt" } },
-      { "command": "commit", "args": { "message": "Initial prices" } },
-      { "command": "writeFile", "args": { "path": "prices.txt", "content": "bread: 10\nmilk: 5\neggs: 3\nbutter: 4" } },
-      { "command": "add", "args": { "path": "prices.txt" } },
-      { "command": "commit", "args": { "message": "Add butter" } },
-      { "command": "writeFile", "args": { "path": "prices.txt", "content": "bread: 1000\nmilk: 5\neggs: 3\nbutter: 4" } },
-      { "command": "add", "args": { "path": "prices.txt" } },
-      { "command": "commit", "args": { "message": "Update prices" } },
-      { "command": "writeFile", "args": { "path": "prices.txt", "content": "bread: 1000\nmilk: 5\neggs: 3\nbutter: 4\ncheese: 7" } },
-      { "command": "add", "args": { "path": "prices.txt" } },
-      { "command": "commit", "args": { "message": "Add cheese" } }
+      {
+        "command": "init",
+        "args": {}
+      },
+      {
+        "command": "writeFile",
+        "args": {
+          "path": "prices.txt",
+          "content": "bread: 10\nmilk: 5\neggs: 3"
+        }
+      },
+      {
+        "command": "add",
+        "args": {
+          "path": "prices.txt"
+        }
+      },
+      {
+        "command": "commit",
+        "args": {
+          "message": "Initial prices"
+        }
+      },
+      {
+        "command": "writeFile",
+        "args": {
+          "path": "prices.txt",
+          "content": "bread: 10\nmilk: 5\neggs: 3\nbutter: 4"
+        }
+      },
+      {
+        "command": "add",
+        "args": {
+          "path": "prices.txt"
+        }
+      },
+      {
+        "command": "commit",
+        "args": {
+          "message": "Add butter"
+        }
+      },
+      {
+        "command": "writeFile",
+        "args": {
+          "path": "prices.txt",
+          "content": "bread: 1000\nmilk: 5\neggs: 3\nbutter: 4"
+        }
+      },
+      {
+        "command": "add",
+        "args": {
+          "path": "prices.txt"
+        }
+      },
+      {
+        "command": "commit",
+        "args": {
+          "message": "Update prices"
+        }
+      },
+      {
+        "command": "writeFile",
+        "args": {
+          "path": "prices.txt",
+          "content": "bread: 1000\nmilk: 5\neggs: 3\nbutter: 4\ncheese: 7"
+        }
+      },
+      {
+        "command": "add",
+        "args": {
+          "path": "prices.txt"
+        }
+      },
+      {
+        "command": "commit",
+        "args": {
+          "message": "Add cheese"
+        }
+      }
     ],
     "head": "main"
   },
   "targetState": {
     "validators": [
-      { "type": "file-content", "params": { "path": "prices.txt", "contains": "bread: 10", "notContains": "bread: 1000" } },
-      { "type": "commit-count", "params": { "min": 5 } },
-      { "type": "commit-message-contains", "params": { "message": "Fix" } },
-      { "type": "staging-empty", "params": {} }
+      {
+        "type": "file-content",
+        "params": {
+          "path": "prices.txt",
+          "contains": "bread: 10",
+          "notContains": "bread: 1000"
+        }
+      },
+      {
+        "type": "file-content",
+        "params": {
+          "path": "prices.txt",
+          "contains": "milk: 5"
+        }
+      },
+      {
+        "type": "file-content",
+        "params": {
+          "path": "prices.txt",
+          "contains": "butter: 4"
+        }
+      },
+      {
+        "type": "file-content",
+        "params": {
+          "path": "prices.txt",
+          "contains": "cheese: 7"
+        }
+      },
+      {
+        "type": "commit-count",
+        "params": {
+          "min": 5
+        }
+      },
+      {
+        "type": "commit-message-contains",
+        "params": {
+          "message": "Fix"
+        }
+      },
+      {
+        "type": "staging-empty",
+        "params": {}
+      }
     ]
   },
   "constraints": {
@@ -57,7 +169,7 @@
     {
       "trigger": "after-attempts",
       "triggerValue": 5,
-      "text": "A monk passing through mutters: 'The third commit — \"Update prices\" — that is where the corruption lies. Edit the file, change 1000 back to 10, then add and commit with a message containing Fix.'",
+      "text": "A monk passing through mutters: 'The third commit \u2014 \"Update prices\" \u2014 that is where the corruption lies. Edit the file, change 1000 back to 10, then add and commit with a message containing Fix.'",
       "penalty": 0.5
     },
     {
@@ -68,7 +180,10 @@
   ],
   "rewards": {
     "stars": {
-      "maxCommands": { "two": 7, "three": 5 }
+      "maxCommands": {
+        "two": 7,
+        "three": 5
+      }
     },
     "achievement": "history-detective"
   }
