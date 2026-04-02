@@ -3,6 +3,13 @@ import type { GitEngine } from '../GitEngine.js';
 import type { CommandResult } from '../types.js';
 import { resolveRef } from '../ref-resolver.js';
 
+/** Simple glob matching supporting * as wildcard */
+function matchGlob(pattern: string, value: string): boolean {
+  // Convert glob to regex: escape special chars, replace * with .*
+  const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+  return new RegExp(`^${escaped}$`).test(value);
+}
+
 export async function tagCommand(args: string[], engine: GitEngine): Promise<CommandResult> {
   const deleteFlag = args.includes('-d') || args.includes('--delete');
   const annotatedFlag = args.includes('-a') || args.includes('--annotate');
@@ -59,11 +66,20 @@ export async function tagCommand(args: string[], engine: GitEngine): Promise<Com
     }
   }
 
-  // git tag (no args) or git tag -l → list tags
+  // git tag (no args) or git tag -l [pattern] → list tags
   const nonFlagArgs = args.filter((a) => !a.startsWith('-'));
-  if (nonFlagArgs.length === 0) {
+  if (nonFlagArgs.length === 0 || (listFlag && nonFlagArgs.length <= 1)) {
+    // Parse optional pattern for -l: git tag -l "v1.*"
+    let pattern: string | null = null;
+    if (listFlag && nonFlagArgs.length === 1) {
+      pattern = nonFlagArgs[0];
+    }
+
     try {
-      const tags = await git.listTags({ fs: engine.fs, dir: engine.dir });
+      let tags = await git.listTags({ fs: engine.fs, dir: engine.dir });
+      if (pattern) {
+        tags = tags.filter((tag) => matchGlob(pattern!, tag));
+      }
       if (tags.length === 0) {
         return { output: '', success: true };
       }

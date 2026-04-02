@@ -32,6 +32,8 @@ export async function runBuiltin(
       return rmCommand(args, fs, cwd);
     case 'grep':
       return grepCommand(args, fs, cwd);
+    case 'mv':
+      return mvBuiltinCommand(args, fs, cwd);
     case 'cd':
       return cdCommand(args);
     case 'head':
@@ -359,6 +361,41 @@ async function wcCommand(args: string[], fs: FsLike, cwd: string): Promise<Built
     return { output: `  ${lineCount}  ${wordCount}  ${charCount} ${nonFlagArgs[0]}`, success: true };
   } catch {
     return { output: `wc: ${nonFlagArgs[0]}: No such file or directory`, success: false };
+  }
+}
+
+async function mvBuiltinCommand(args: string[], fs: FsLike, cwd: string): Promise<BuiltinResult> {
+  const positional = args.filter(a => !a.startsWith('-'));
+
+  if (positional.length < 2) {
+    return { output: 'usage: mv <source> <destination>', success: false };
+  }
+
+  const source = positional[0];
+  const dest = positional[1];
+  const srcPath = resolvePath(source, cwd);
+  const destPath = resolvePath(dest, cwd);
+
+  try {
+    await fs.promises.stat(srcPath);
+  } catch {
+    return { output: `mv: cannot stat '${source}': No such file or directory`, success: false };
+  }
+
+  try {
+    await fs.promises.stat(destPath);
+    return { output: `mv: '${dest}' already exists`, success: false };
+  } catch {
+    // Good, dest doesn't exist
+  }
+
+  try {
+    const content = await fs.promises.readFile(srcPath);
+    await fs.promises.writeFile(destPath, content);
+    await fs.promises.unlink(srcPath);
+    return { output: '', success: true };
+  } catch {
+    return { output: `mv: cannot move '${source}' to '${dest}'`, success: false };
   }
 }
 

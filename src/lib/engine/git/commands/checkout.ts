@@ -4,7 +4,7 @@ import type { CommandResult } from '../types.js';
 import { resolveRef } from '../ref-resolver.js';
 
 export async function checkoutCommand(args: string[], engine: GitEngine): Promise<CommandResult> {
-  const createBranch = args.includes('-b');
+  const createBranch = args.includes('-b') || args.includes('-c') || args.includes('--create');
 
   // Handle: git checkout [<ref>] -- <file>
   const dashDashIndex = args.indexOf('--');

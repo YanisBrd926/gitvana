@@ -4,18 +4,20 @@ import type { CommandResult } from '../types.js';
 import { resolveRef, getFilesAtCommit } from '../ref-resolver.js';
 
 export async function showCommand(args: string[], engine: GitEngine): Promise<CommandResult> {
-  const ref = args[0] || 'HEAD';
+  const stat = args.includes('--stat');
+  const nonFlagArgs = args.filter(a => !a.startsWith('-'));
+  const ref = nonFlagArgs[0] || 'HEAD';
 
   // git show <commit>:<file> → show file content at a specific commit
   if (ref.includes(':')) {
     return await showFileAtCommit(engine, ref);
   }
 
-  // git show [<commit>] → show commit details + diff
-  return await showCommit(engine, ref);
+  // git show [<commit>] → show commit details + diff (or --stat)
+  return await showCommit(engine, ref, stat);
 }
 
-async function showCommit(engine: GitEngine, ref: string): Promise<CommandResult> {
+async function showCommit(engine: GitEngine, ref: string, stat = false): Promise<CommandResult> {
   let oid: string;
   try {
     oid = await resolveRef(ref, engine);
@@ -38,11 +40,18 @@ async function showCommit(engine: GitEngine, ref: string): Promise<CommandResult
     lines.push(`    ${commit.message.trim()}`);
     lines.push('');
 
-    // Generate diff against parent
+    // Generate diff or stat against parent
     const parentOid = commit.parent[0];
-    const diff = await generateDiff(engine, parentOid || null, oid);
-    if (diff) {
-      lines.push(diff);
+    if (stat) {
+      const statOutput = await generateStat(engine, parentOid || null, oid);
+      if (statOutput) {
+        lines.push(statOutput);
+      }
+    } else {
+      const diff = await generateDiff(engine, parentOid || null, oid);
+      if (diff) {
+        lines.push(diff);
+      }
     }
 
     return { output: lines.join('\n'), success: true };
@@ -95,6 +104,49 @@ async function showFileAtCommit(engine: GitEngine, refAndPath: string): Promise<
   } catch (err) {
     return { output: `fatal: ${err instanceof Error ? err.message : err}`, success: false };
   }
+}
+
+async function generateStat(engine: GitEngine, parentOid: string | null, commitOid: string): Promise<string> {
+  const commitFiles = await getFilesAtCommit(engine, commitOid);
+  const parentFiles = parentOid ? await getFilesAtCommit(engine, parentOid) : new Map<string, string>();
+
+  const allPaths = new Set([...parentFiles.keys(), ...commitFiles.keys()]);
+  const fileStats: { name: string; added: number; removed: number }[] = [];
+
+  for (const filepath of [...allPaths].sort()) {
+    const oldContent = parentFiles.get(filepath);
+    const newContent = commitFiles.get(filepath);
+    if (oldContent === newContent) continue;
+
+    const oldLines = oldContent ? oldContent.split('\n').filter(Boolean) : [];
+    const newLines = newContent ? newContent.split('\n').filter(Boolean) : [];
+    const added = newContent !== undefined ? newLines.length : 0;
+    const removed = oldContent !== undefined ? oldLines.length : 0;
+    fileStats.push({ name: filepath, added, removed });
+  }
+
+  if (fileStats.length === 0) return '';
+
+  const lines: string[] = [];
+  let totalAdded = 0;
+  let totalRemoved = 0;
+  const maxNameLen = Math.max(...fileStats.map(f => f.name.length));
+
+  for (const f of fileStats) {
+    const changes = f.added + f.removed;
+    const bar = '+'.repeat(f.added) + '-'.repeat(f.removed);
+    const paddedName = f.name.padEnd(maxNameLen);
+    lines.push(` ${paddedName} | ${String(changes).padStart(3)} ${bar}`);
+    totalAdded += f.added;
+    totalRemoved += f.removed;
+  }
+
+  const filesWord = fileStats.length === 1 ? 'file changed' : 'files changed';
+  const insertions = totalAdded > 0 ? `, ${totalAdded} insertion${totalAdded !== 1 ? 's' : ''}(+)` : '';
+  const deletions = totalRemoved > 0 ? `, ${totalRemoved} deletion${totalRemoved !== 1 ? 's' : ''}(-)` : '';
+  lines.push(` ${fileStats.length} ${filesWord}${insertions}${deletions}`);
+
+  return lines.join('\n');
 }
 
 async function generateDiff(engine: GitEngine, parentOid: string | null, commitOid: string): Promise<string> {

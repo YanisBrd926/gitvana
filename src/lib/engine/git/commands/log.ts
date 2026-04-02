@@ -30,9 +30,11 @@ export async function logCommand(args: string[], engine: GitEngine): Promise<Com
   const allBranches = args.includes('--all');
   const graph = args.includes('--graph');
   const showPatch = args.includes('-p') || args.includes('--patch');
+  const showStat = args.includes('--stat');
   const noMerges = args.includes('--no-merges');
   const firstParent = args.includes('--first-parent');
   const reverse = args.includes('--reverse');
+  const decorate = args.includes('--decorate');
   const depthIdx = args.indexOf('-n') !== -1 ? args.indexOf('-n') : args.indexOf('--max-count');
   const depth = depthIdx !== -1 ? parseInt(args[depthIdx + 1], 10) || 10 : 10;
 
@@ -90,7 +92,7 @@ export async function logCommand(args: string[], engine: GitEngine): Promise<Com
 
   // Parse ref argument: first non-flag arg that isn't a value for -n/--max-count/--author/--grep/--since/--until/--format
   const flagsWithValues = new Set(['-n', '--max-count', '--author', '--grep', '--since', '--until', '--format']);
-  const knownFlags = new Set(['--oneline', '--all', '--graph', '-p', '--patch', '-n', '--max-count', '--author', '--grep', '--since', '--until', '--format', '--no-merges', '--first-parent', '--reverse']);
+  const knownFlags = new Set(['--oneline', '--all', '--graph', '-p', '--patch', '--stat', '-n', '--max-count', '--author', '--grep', '--since', '--until', '--format', '--no-merges', '--first-parent', '--reverse', '--decorate']);
   let refArg: string | null = null;
   for (let i = 0; i < args.length; i++) {
     if (flagsWithValues.has(args[i])) {
@@ -224,9 +226,36 @@ export async function logCommand(args: string[], engine: GitEngine): Promise<Com
       return { output: lines.join('\n'), success: true };
     }
 
+    // Build ref decoration map for --decorate
+    let refMap: Map<string, string[]> | null = null;
+    if (decorate) {
+      const branches = await git.listBranches({ fs: engine.fs, dir: engine.dir });
+      const currentBranch = await git.currentBranch({ fs: engine.fs, dir: engine.dir });
+      const tags = await git.listTags({ fs: engine.fs, dir: engine.dir }).catch(() => [] as string[]);
+      refMap = new Map<string, string[]>();
+      for (const branch of branches) {
+        try {
+          const oid = await git.resolveRef({ fs: engine.fs, dir: engine.dir, ref: branch });
+          if (!refMap.has(oid)) refMap.set(oid, []);
+          const label = branch === currentBranch ? `HEAD -> ${branch}` : branch;
+          refMap.get(oid)!.push(label);
+        } catch { /* skip */ }
+      }
+      for (const tag of tags) {
+        try {
+          const oid = await git.resolveRef({ fs: engine.fs, dir: engine.dir, ref: tag });
+          if (!refMap.has(oid)) refMap.set(oid, []);
+          refMap.get(oid)!.push(`tag: ${tag}`);
+        } catch { /* skip */ }
+      }
+    }
+
     if (oneline) {
       const prefix = graph ? '* ' : '';
-      const lines = commits.map((c) => `${prefix}${c.oid.slice(0, 7)} ${c.commit.message.split('\n')[0]}`);
+      const lines = commits.map((c) => {
+        const decoration = refMap ? (refMap.get(c.oid) ? ` (${refMap.get(c.oid)!.join(', ')})` : '') : '';
+        return `${prefix}${c.oid.slice(0, 7)}${decoration} ${c.commit.message.split('\n')[0]}`;
+      });
       return { output: lines.join('\n'), success: true };
     }
 
@@ -234,8 +263,9 @@ export async function logCommand(args: string[], engine: GitEngine): Promise<Com
     for (let i = 0; i < commits.length; i++) {
       const c = commits[i];
       const isLast = i === commits.length - 1;
+      const decoration = refMap ? (refMap.get(c.oid) ? ` (${refMap.get(c.oid)!.join(', ')})` : '') : '';
       if (graph) {
-        lines.push(`* commit ${c.oid}`);
+        lines.push(`* commit ${c.oid}${decoration}`);
         lines.push(`| Author: ${c.commit.author.name} <${c.commit.author.email}>`);
         const date = new Date(c.commit.author.timestamp * 1000);
         lines.push(`| Date:   ${date.toUTCString()}`);
@@ -243,13 +273,21 @@ export async function logCommand(args: string[], engine: GitEngine): Promise<Com
         lines.push(`|     ${c.commit.message.trim()}`);
         lines.push(isLast ? '' : '|');
       } else {
-        lines.push(`commit ${c.oid}`);
+        lines.push(`commit ${c.oid}${decoration}`);
         lines.push(`Author: ${c.commit.author.name} <${c.commit.author.email}>`);
         const date = new Date(c.commit.author.timestamp * 1000);
         lines.push(`Date:   ${date.toUTCString()}`);
         lines.push('');
         lines.push(`    ${c.commit.message.trim()}`);
         lines.push('');
+      }
+
+      if (showStat) {
+        const stat = await generateLogStat(engine, c);
+        if (stat) {
+          lines.push(stat);
+          lines.push('');
+        }
       }
 
       if (showPatch) {
@@ -322,4 +360,55 @@ async function generateLogDiff(
   }
 
   return diffLines.join('\n');
+}
+
+async function generateLogStat(
+  engine: GitEngine,
+  commit: Awaited<ReturnType<typeof git.log>>[number],
+): Promise<string> {
+  const commitFiles = await getFilesAtCommit(engine, commit.oid);
+  const parentOid = commit.commit.parent[0];
+  const parentFiles = parentOid ? await getFilesAtCommit(engine, parentOid) : new Map<string, string>();
+
+  const allPaths = new Set([...parentFiles.keys(), ...commitFiles.keys()]);
+  const fileStats: { name: string; added: number; removed: number }[] = [];
+
+  for (const filepath of [...allPaths].sort()) {
+    const oldContent = parentFiles.get(filepath);
+    const newContent = commitFiles.get(filepath);
+
+    if (oldContent === newContent) continue;
+
+    const oldLines = oldContent ? oldContent.split('\n').filter(Boolean) : [];
+    const newLines = newContent ? newContent.split('\n').filter(Boolean) : [];
+
+    // Simple line-count based stat
+    const added = newContent !== undefined ? newLines.length : 0;
+    const removed = oldContent !== undefined ? oldLines.length : 0;
+
+    fileStats.push({ name: filepath, added, removed });
+  }
+
+  if (fileStats.length === 0) return '';
+
+  const lines: string[] = [];
+  let totalAdded = 0;
+  let totalRemoved = 0;
+  const maxNameLen = Math.max(...fileStats.map(f => f.name.length));
+
+  for (const f of fileStats) {
+    const changes = f.added + f.removed;
+    const bar = '+'.repeat(f.added) + '-'.repeat(f.removed);
+    const paddedName = f.name.padEnd(maxNameLen);
+    lines.push(` ${paddedName} | ${String(changes).padStart(3)} ${bar}`);
+    totalAdded += f.added;
+    totalRemoved += f.removed;
+  }
+
+  const filesWord = fileStats.length === 1 ? 'file changed' : 'files changed';
+  const insertions = totalAdded > 0 ? `, ${totalAdded} insertion${totalAdded !== 1 ? 's' : ''}(+)` : '';
+  const deletions = totalRemoved > 0 ? `, ${totalRemoved} deletion${totalRemoved !== 1 ? 's' : ''}(-)` : '';
+  lines.push(` ${fileStats.length} ${filesWord}${insertions}${deletions}`);
+
+  return lines.join('\n');
 }

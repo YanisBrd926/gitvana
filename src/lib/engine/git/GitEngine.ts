@@ -28,6 +28,7 @@ import { configCommand } from './commands/config.js';
 import { remoteCommand, pushCommand, pullCommand, fetchCommand } from './commands/remote.js';
 import { cleanCommand } from './commands/clean.js';
 import { mvCommand } from './commands/mv.js';
+import { restoreCommand } from './commands/restore.js';
 
 interface CommandHandler {
   (args: string[], engine: GitEngine): Promise<CommandResult>;
@@ -103,6 +104,7 @@ export class GitEngine {
     this.commands.set('fetch', fetchCommand);
     this.commands.set('clean', cleanCommand);
     this.commands.set('mv', mvCommand);
+    this.commands.set('restore', restoreCommand);
   }
 
   setAllowedCommands(commands: string[] | null): void {

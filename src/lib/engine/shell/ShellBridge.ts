@@ -357,17 +357,20 @@ export class ShellBridge {
     'branch', 'checkout', 'switch', 'merge', 'reset', 'rm',
     'tag', 'cherry-pick', 'show', 'revert', 'stash', 'reflog',
     'rebase', 'blame', 'bisect', 'config', 'remote', 'push',
-    'pull', 'fetch', 'clean', 'mv',
+    'pull', 'fetch', 'clean', 'mv', 'restore',
   ];
 
   private static readonly GIT_FLAGS: Record<string, string[]> = {
     'add':      ['-u', '--update', '-A', '--all'],
     'commit':   ['-m', '--message', '--allow-empty', '--amend'],
-    'log':      ['--oneline', '--all', '--graph', '-p', '--patch', '-n', '--max-count', '--author', '--grep', '--since', '--until', '--format', '--pretty', '--no-merges', '--first-parent', '--reverse'],
+    'log':      ['--oneline', '--all', '--graph', '-p', '--patch', '--stat', '--decorate', '-n', '--max-count', '--author', '--grep', '--since', '--until', '--format', '--pretty', '--no-merges', '--first-parent', '--reverse'],
     'status':   ['-s', '--short'],
     'diff':     ['--staged', '--cached', '--stat', '--name-only', '--name-status'],
     'reset':    ['--soft', '--mixed', '--hard'],
-    'checkout': ['-b'],
+    'checkout': ['-b', '-c', '--create'],
+    'switch':   ['-c', '--create', '-b'],
+    'restore':  ['--staged', '--source'],
+    'show':     ['--stat'],
     'branch':   ['-d', '-D', '--delete', '--force-delete', '-v', '--verbose', '-m', '--move', '--merged', '--no-merged'],
     'tag':      ['-a', '--annotate', '-d', '--delete', '-l', '--list', '-m', '--message'],
     'rm':       ['--cached', '-r', '--recursive'],
@@ -381,12 +384,12 @@ export class ShellBridge {
   };
 
   private static readonly BUILTINS = [
-    'git', 'ls', 'cat', 'echo', 'touch', 'mkdir', 'rm', 'pwd', 'grep', 'cd',
+    'git', 'ls', 'cat', 'echo', 'touch', 'mkdir', 'rm', 'mv', 'pwd', 'grep', 'cd',
     'clear', 'edit', 'help', 'hint', 'docs', 'solution', 'solve', 'skip', 'undo',
     'head', 'tail', 'wc', 'history', 'alias',
   ];
 
-  private static readonly FILE_ARG_COMMANDS = ['add', 'cat', 'edit', 'rm', 'touch', 'mv'];
+  private static readonly FILE_ARG_COMMANDS = ['add', 'cat', 'edit', 'rm', 'touch', 'mv', 'restore'];
 
   private async handleTab(): Promise<void> {
     const line = this.lineBuffer;
@@ -679,7 +682,7 @@ export class ShellBridge {
             this.writeLine(result.output);
           }
           // File-modifying builtins should trigger UI refresh
-          const fileModifiers = ['touch', 'echo', 'mkdir', 'rm'];
+          const fileModifiers = ['touch', 'echo', 'mkdir', 'rm', 'mv'];
           if (fileModifiers.includes(parsed.command)) {
             eventBus.emit('state:changed', undefined as never);
           }
