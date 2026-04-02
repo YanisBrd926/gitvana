@@ -158,11 +158,22 @@ Bun.serve({
     }
 
     // --- Static files ---
-    const filePath = join(DIST_DIR, url.pathname === "/" ? "index.html" : url.pathname);
-    const file = Bun.file(filePath);
-    if (await file.exists()) return new Response(file);
+    const pathname = decodeURIComponent(url.pathname);
+    const filePath = join(DIST_DIR, pathname === "/" ? "index.html" : pathname);
 
-    // --- SPA fallback ---
+    try {
+      const file = Bun.file(filePath);
+      if (await file.exists()) {
+        return new Response(file);
+      }
+    } catch {
+      // File not found or path error — fall through to SPA
+    }
+
+    // --- SPA fallback (only for HTML-like requests, not assets) ---
+    if (pathname.includes('.') && !pathname.endsWith('.html')) {
+      return new Response("Not Found", { status: 404 });
+    }
     return new Response(Bun.file(join(DIST_DIR, "index.html")));
   },
 });
