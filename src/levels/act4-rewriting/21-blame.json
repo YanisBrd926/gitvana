@@ -1,0 +1,56 @@
+{
+  "id": "act4-21-blame",
+  "act": 4,
+  "order": 21,
+  "title": "Who Wrote This?",
+  "subtitle": "The ancient art of git blame",
+  "difficulty": "intermediate",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "The monastery's codebase has a bug. Line 2 of code.txt says \"BUG HERE\" in big, obvious letters. And yet somehow it went unnoticed through four commits by four different monks.\n\nThe Head Monk needs answers. \"Who introduced this bug? I need a name. I'm not angry, I just want to... talk to them.\" He cracks his knuckles.\n\nFortunately, Git has a tool for exactly this: git blame. It shows who last modified each line of a file, and in which commit. Find the culprit, fix the bug, and commit the fix.\n\nAlice wrote line 1. Bob added line 4. Charlie... well, let's just say Charlie has some explaining to do. Dave added line 5 and claims innocence.\n\nThe monastery detective work begins.",
+    "concept": "git blame shows the commit and author responsible for each line in a file. It's invaluable for understanding who changed what and when. Use it to trace bugs back to their source, then fix them.",
+    "objectives": [
+      "Use git blame on code.txt to find who introduced the bug",
+      "Fix line 2 to remove the bug",
+      "Commit the fix"
+    ],
+    "newCommands": ["git blame <file>"]
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "code.txt", "content": "line 1: correct\nline 2: correct\nline 3: correct" } },
+      { "command": "add", "args": { "path": "code.txt" } },
+      { "command": "commit", "args": { "message": "Initial code", "author": "Alice" } },
+      { "command": "writeFile", "args": { "path": "code.txt", "content": "line 1: correct\nline 2: correct\nline 3: correct\nline 4: correct" } },
+      { "command": "add", "args": { "path": "code.txt" } },
+      { "command": "commit", "args": { "message": "Add line 4", "author": "Bob" } },
+      { "command": "writeFile", "args": { "path": "code.txt", "content": "line 1: correct\nline 2: BUG HERE\nline 3: correct\nline 4: correct" } },
+      { "command": "add", "args": { "path": "code.txt" } },
+      { "command": "commit", "args": { "message": "Update code", "author": "Charlie" } },
+      { "command": "writeFile", "args": { "path": "code.txt", "content": "line 1: correct\nline 2: BUG HERE\nline 3: correct\nline 4: correct\nline 5: correct" } },
+      { "command": "add", "args": { "path": "code.txt" } },
+      { "command": "commit", "args": { "message": "Add line 5", "author": "Dave" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "file-content", "params": { "path": "code.txt", "notContains": "BUG HERE" } },
+      { "type": "commit-count", "params": { "min": 5 } },
+      { "type": "staging-empty", "params": {} }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 8
+  },
+  "hints": [
+    { "trigger": "after-attempts", "triggerValue": 3, "text": "The detective cat sniffs the evidence: 'git blame code.txt will show you who last touched each line. Look at line 2.'", "penalty": 0.25 },
+    { "trigger": "after-attempts", "triggerValue": 5, "text": "A magnifying glass reveals: 'Find the culprit, fix the line, commit the fix. Standard detective procedure.'", "penalty": 0.5 }
+  ],
+  "rewards": {
+    "stars": { "maxCommands": { "two": 6, "three": 4 } },
+    "achievement": "blame-detective"
+  }
+}

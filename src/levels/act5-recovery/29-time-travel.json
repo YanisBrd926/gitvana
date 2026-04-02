@@ -1,0 +1,68 @@
+{
+  "id": "act5-29-time-travel",
+  "act": 5,
+  "order": 29,
+  "title": "Time Traveler",
+  "subtitle": "Reconstruct the correct config from 5 historical versions",
+  "difficulty": "expert",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "INCIDENT REPORT: config.txt has been modified 5 times across 4 tagged releases. Each version changed different settings. The current version is a disaster — wrong password, wrong port, and a critical feature flag that was accidentally removed.\n\nThe Head Monk slides you a timeline:\n- v1.0: Initial config with the correct feature flag (enable_backups: true)\n- v2.0: Changed to the correct database password (db_pass: monastery_secure_789)\n- v3.0: Set the correct port (port: 8443)\n- v4.0: Someone broke the password AND removed the backup flag\n- Current: Someone also broke the port\n\n\"Three problems in the current config. Each correct value lives in a DIFFERENT historical version. You must use git show to read each tagged version, find the correct values, and assemble the one true config.\"\n\nThe cat has memorized every version of every config file. But it's not going to help.\n\n\"This is temporal archaeology. Dig through the layers. Find the truth.\"",
+    "concept": "Git stores the complete content of every file at every commit. You can read any historical version:\n\ngit tag — list all tags\ngit show v1.0:config.txt — read config.txt as it was at tag v1.0\ngit log --oneline — see the commit history\n\nWhen the current version has multiple problems, each fix may come from a different point in history. You need to investigate each version to find which one has the correct value for each setting.",
+    "objectives": [
+      "Use git log and git tag to understand the history",
+      "Use git show to read config.txt at each tagged version",
+      "Fix the 3 problems: restore password from v2.0, port from v3.0, and backup flag from v1.0",
+      "The final config must have ALL correct values combined"
+    ],
+    "newCommands": []
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "config.txt", "content": "database: postgres\nhost: prod.monastery.io\nport: 5432\ndb_pass: initial_pass\nmax_connections: 100\nenable_backups: true\nlog_level: info" } },
+      { "command": "add", "args": { "path": "config.txt" } },
+      { "command": "commit", "args": { "message": "v1.0 initial config" } },
+
+      { "command": "writeFile", "args": { "path": "config.txt", "content": "database: postgres\nhost: prod.monastery.io\nport: 5432\ndb_pass: monastery_secure_789\nmax_connections: 100\nenable_backups: true\nlog_level: info" } },
+      { "command": "add", "args": { "path": "config.txt" } },
+      { "command": "commit", "args": { "message": "v2.0 secure the database password" } },
+
+      { "command": "writeFile", "args": { "path": "config.txt", "content": "database: postgres\nhost: prod.monastery.io\nport: 8443\ndb_pass: monastery_secure_789\nmax_connections: 200\nenable_backups: true\nlog_level: warn" } },
+      { "command": "add", "args": { "path": "config.txt" } },
+      { "command": "commit", "args": { "message": "v3.0 update port and connections" } },
+
+      { "command": "writeFile", "args": { "path": "config.txt", "content": "database: postgres\nhost: prod.monastery.io\nport: 8443\ndb_pass: LEAKED_password\nmax_connections: 200\nlog_level: warn" } },
+      { "command": "add", "args": { "path": "config.txt" } },
+      { "command": "commit", "args": { "message": "v4.0 config cleanup (MISTAKE)" } },
+
+      { "command": "writeFile", "args": { "path": "config.txt", "content": "database: postgres\nhost: prod.monastery.io\nport: 3000\ndb_pass: LEAKED_password\nmax_connections: 200\nlog_level: debug" } },
+      { "command": "add", "args": { "path": "config.txt" } },
+      { "command": "commit", "args": { "message": "Quick port change for testing (OOPS)" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "file-content", "params": { "path": "config.txt", "contains": "monastery_secure_789" } },
+      { "type": "file-content", "params": { "path": "config.txt", "contains": "port: 8443" } },
+      { "type": "file-content", "params": { "path": "config.txt", "contains": "enable_backups: true" } },
+      { "type": "file-content", "params": { "path": "config.txt", "notContains": "LEAKED" } },
+      { "type": "file-content", "params": { "path": "config.txt", "notContains": "port: 3000" } },
+      { "type": "commit-count", "params": { "min": 6 } },
+      { "type": "staging-empty", "params": {} }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 12
+  },
+  "hints": [
+    { "trigger": "after-attempts", "triggerValue": 5, "text": "Use git log --oneline to see the history. Then git show HEAD~N:config.txt for each version to find which had the correct password, port, and backup flag.", "penalty": 0.25 },
+    { "trigger": "manual", "text": "The password 'monastery_secure_789' is from HEAD~3. The port '8443' is from HEAD~2. The 'enable_backups: true' line is from HEAD~4. Combine them all into the current config.", "penalty": 1 }
+  ],
+  "rewards": {
+    "stars": { "maxCommands": { "two": 10, "three": 7 } },
+    "achievement": "time-traveler"
+  }
+}

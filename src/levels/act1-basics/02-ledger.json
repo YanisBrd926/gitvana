@@ -1,0 +1,64 @@
+{
+  "id": "act1-02-ledger",
+  "act": 1,
+  "order": 2,
+  "title": "The Monastery Ledger",
+  "subtitle": "Not everything belongs in the sacred scrolls",
+  "difficulty": "beginner",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "The monastery bookkeeper — a nervous monk who triple-checks everything — hands you three files and a worried expression.\n\n\"We have data.txt and config.txt, which MUST go into the repository. But that temp.log file? It's garbage. Debug output. Digital refuse. If you commit it, the Head Monk will make you clean the meditation hall with a toothbrush.\"\n\nHe glances around. \"His toothbrush. He's very particular about that punishment.\"",
+    "concept": "git add lets you choose exactly which files to include in your next commit. This is called 'selective staging.' You don't have to commit everything in your working directory — only the files you explicitly add. This is how you keep temporary files, logs, and other junk out of your repository's history.",
+    "objectives": [
+      "Stage data.txt and config.txt (but NOT temp.log)",
+      "Commit the staged files",
+      "temp.log must remain in the working directory but untracked"
+    ],
+    "newCommands": ["git status"]
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "data.txt", "content": "Monastery inventory:\n- 47 meditation cushions\n- 12 incense holders\n- 1 suspiciously well-fed cat" } },
+      { "command": "writeFile", "args": { "path": "config.txt", "content": "monastery_name=Order of the Eternal Rebase\nfounded=1987\nmotto=Commit early, commit often" } },
+      { "command": "writeFile", "args": { "path": "temp.log", "content": "[DEBUG] Cat knocked over incense at 3:47 AM\n[DEBUG] Brother Jenkins fell asleep during merge review\n[WARN] Someone pushed to main again" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "commit-count", "params": { "min": 1 } },
+      { "type": "file-exists", "params": { "path": "temp.log", "tracked": false } },
+      { "type": "staging-empty", "params": {} }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 5
+  },
+  "hints": [
+    {
+      "trigger": "after-attempts",
+      "triggerValue": 2,
+      "text": "The bookkeeper whispers: 'Use git status to see what's what. Then git add only the files you want. Not temp.log. Never temp.log.'",
+      "penalty": 0.25
+    },
+    {
+      "trigger": "after-attempts",
+      "triggerValue": 4,
+      "text": "A note taped to the monastery bulletin board reads: 'git add data.txt config.txt — you can add multiple files at once. Then commit.'",
+      "penalty": 0.5
+    },
+    {
+      "trigger": "manual",
+      "text": "The monastery cat, looking smug, types: git add data.txt config.txt && git commit -m \"Add monastery records\"",
+      "penalty": 1
+    }
+  ],
+  "rewards": {
+    "stars": {
+      "maxCommands": { "two": 4, "three": 3 }
+    },
+    "achievement": "selective-stager"
+  }
+}

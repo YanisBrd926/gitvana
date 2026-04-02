@@ -1,0 +1,56 @@
+{
+  "id": "act4-20-force-push",
+  "act": 4,
+  "order": 20,
+  "title": "Force Push Recovery",
+  "subtitle": "Someone overwrote your work, but the reflog knows",
+  "difficulty": "advanced",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "You come back from lunch. Three commits of careful, beautiful work -- gone. The git log shows only your first commit. Someone (Brother Linus swears it wasn't him) force-pushed over your branch.\n\nYour v2 and v3 changes have vanished from the branch. The current state is back to v1. You stare at the screen in disbelief.\n\nBut wait. You remember the Head Monk's teaching: \"The reflog remembers ALL.\" Your local reflog still has entries for when HEAD pointed at those commits. They're still in the object store, just unreachable by any branch.\n\nTime to dig through the reflog, find your v3 commit, and bring your work back from the dead.",
+    "concept": "When someone force-pushes (or when you accidentally reset), commits don't actually disappear from the local repository immediately. The reflog keeps a record of where HEAD pointed. You can find 'lost' commits there and create new branches to recover them.",
+    "objectives": [
+      "Use git reflog to find the lost v3 commit",
+      "Create a branch called 'recovered' at that commit",
+      "Verify your work is restored"
+    ],
+    "newCommands": []
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "a.txt", "content": "v1" } },
+      { "command": "add", "args": { "path": "a.txt" } },
+      { "command": "commit", "args": { "message": "v1" } },
+      { "command": "writeFile", "args": { "path": "a.txt", "content": "v2" } },
+      { "command": "add", "args": { "path": "a.txt" } },
+      { "command": "commit", "args": { "message": "Your important work - v2" } },
+      { "command": "writeFile", "args": { "path": "a.txt", "content": "v3" } },
+      { "command": "add", "args": { "path": "a.txt" } },
+      { "command": "commit", "args": { "message": "Your important work - v3" } },
+      { "command": "checkout", "args": { "ref": "HEAD~2" } },
+      { "command": "deleteBranch", "args": { "name": "main" } },
+      { "command": "branch", "args": { "name": "main" } },
+      { "command": "checkout", "args": { "ref": "main" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "file-content", "params": { "path": "a.txt", "contains": "v3" } },
+      { "type": "commit-count", "params": { "min": 3 } }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 8
+  },
+  "hints": [
+    { "trigger": "after-attempts", "triggerValue": 3, "text": "The monastery backup monk hints: 'git reflog will show entries from when you made those commits. Look for the v3 commit hash.'", "penalty": 0.25 },
+    { "trigger": "after-attempts", "triggerValue": 5, "text": "A note on the backup drive reads: 'The reflog remembers everything. Find the lost commit and give it a branch name.'", "penalty": 0.5 }
+  ],
+  "rewards": {
+    "stars": { "maxCommands": { "two": 6, "three": 4 } },
+    "achievement": "force-push-survivor"
+  }
+}

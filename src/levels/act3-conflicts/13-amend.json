@@ -1,0 +1,50 @@
+{
+  "id": "act3-13-amend",
+  "act": 3,
+  "order": 13,
+  "title": "The Amend Kata",
+  "subtitle": "One commit, three mistakes, zero excuses",
+  "difficulty": "intermediate",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "You just made your first commit in the monastery's new project. You feel proud. You lean back. You sip your herbal tea.\n\nThen you notice three things at once:\n1. The commit message says \"Intial setup.\" INTIAL.\n2. You forgot to create the readme.md the Head Monk specifically asked for.\n3. There's a console.log('debug') sitting in app.js like a spiritual blemish.\n\nThe Head Monk hasn't pulled yet. There's still time. You can fix all three problems in ONE amend. The ancient texts call this \"The Amend Kata\" -- correcting your mistakes before anyone notices.\n\nBreathe. Focus. Amend.",
+    "concept": "git commit --amend is more powerful than just fixing a message. You can also add new files and change existing ones -- all folded into the same commit as if the mistake never happened. Stage your changes first, then amend.",
+    "objectives": [
+      "Create a readme.md file",
+      "Fix the debug line in app.js",
+      "Amend the commit to fix the message, include readme.md, and update app.js"
+    ],
+    "newCommands": ["git commit --amend -m '<message>'"]
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "app.js", "content": "function hello() {\n  console.log('debug');\n  return 'hello';\n}" } },
+      { "command": "add", "args": { "path": "app.js" } },
+      { "command": "commit", "args": { "message": "Intial setup" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "commit-count", "params": { "count": 1 } },
+      { "type": "commit-message-contains", "params": { "message": "Initial setup" } },
+      { "type": "file-exists", "params": { "path": "readme.md" } },
+      { "type": "file-content", "params": { "path": "app.js", "notContains": "debug" } },
+      { "type": "staging-empty", "params": {} }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 8
+  },
+  "hints": [
+    { "trigger": "after-attempts", "triggerValue": 3, "text": "The monastery cat stretches on a scroll that reads: 'First fix the files and stage them with git add. THEN amend.'", "penalty": 0.25 },
+    { "trigger": "after-attempts", "triggerValue": 5, "text": "A monk whispers: 'Create readme.md, edit app.js to remove the debug line, git add both files, then git commit --amend -m \"Initial setup\".'", "penalty": 0.5 },
+    { "trigger": "manual", "text": "The cat does it for you: echo '# Readme' > readme.md && edit app.js to remove the debug line && git add app.js readme.md && git commit --amend -m \"Initial setup\"", "penalty": 1 }
+  ],
+  "rewards": {
+    "stars": { "maxCommands": { "two": 6, "three": 4 } },
+    "achievement": "amend-kata"
+  }
+}

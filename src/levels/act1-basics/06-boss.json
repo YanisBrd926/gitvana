@@ -1,0 +1,65 @@
+{
+  "id": "act1-06-boss",
+  "act": 1,
+  "order": 6,
+  "title": "The Merge Crucible",
+  "subtitle": "The Head Monk's final test",
+  "difficulty": "intermediate",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "The Head Monk stands before the Inner Gate, arms crossed. Behind him, two scrolls hang on the wall — the monastery's weekly menu, edited by two monks who apparently never communicate.\n\n\"Brother Monday updated Monday's meal to Pizza on the 'good-changes' branch. Meanwhile, Sister Monday went rogue on the 'bad-changes' branch and wrote GARBAGE into Monday's slot.\"\n\nHe fixes you with a stare. \"Merge the good changes into main — that one should go smoothly. Then... the bad branch. Merge it too, but when you see the horror within, ABORT. Some merges are not meant to be.\"\n\nThe monastery cat is eating from both menus. It has no conflicts.",
+    "concept": "When two branches modify the same file, Git cannot automatically merge them. It creates a conflict, marking both versions in the file with <<<<<<< and >>>>>>> markers. You must manually edit the file to resolve the conflict, then stage and commit. If a merge goes wrong, git merge --abort cancels it and restores the previous state.",
+    "objectives": [
+      "Merge the 'good-changes' branch into main (clean merge)",
+      "Attempt to merge 'bad-changes' — see the GARBAGE conflict and abort with 'git merge --abort'",
+      "The final menu.txt must contain 'Pizza' but NOT 'GARBAGE'"
+    ],
+    "newCommands": ["git merge <branch>", "git merge --abort"]
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "menu.txt", "content": "Monday: Rice\nTuesday: Soup" } },
+      { "command": "add", "args": { "path": "menu.txt" } },
+      { "command": "commit", "args": { "message": "Initial menu" } },
+      { "command": "branch", "args": { "name": "good-changes" } },
+      { "command": "branch", "args": { "name": "bad-changes" } },
+      { "command": "checkout", "args": { "ref": "good-changes" } },
+      { "command": "writeFile", "args": { "path": "menu.txt", "content": "Monday: Pizza\nTuesday: Soup" } },
+      { "command": "add", "args": { "path": "menu.txt" } },
+      { "command": "commit", "args": { "message": "Update Monday to Pizza" } },
+      { "command": "checkout", "args": { "ref": "bad-changes" } },
+      { "command": "writeFile", "args": { "path": "menu.txt", "content": "Monday: GARBAGE\nTuesday: Soup" } },
+      { "command": "add", "args": { "path": "menu.txt" } },
+      { "command": "commit", "args": { "message": "Ruin Monday's meal" } },
+      { "command": "checkout", "args": { "ref": "main" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "file-content", "params": { "path": "menu.txt", "contains": "Pizza", "notContains": "GARBAGE" } },
+      { "type": "commit-count", "params": { "min": 2 } },
+      { "type": "staging-empty", "params": {} },
+      { "type": "no-conflicts", "params": {} }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 12
+  },
+  "hints": [
+    {
+      "trigger": "after-attempts",
+      "triggerValue": 5,
+      "text": "The Head Monk nods toward the scrolls: 'Merge wisely. Some branches deserve to be merged. Others deserve to be abandoned. You have all the tools you need.'",
+      "penalty": 0.5
+    }
+  ],
+  "rewards": {
+    "stars": {
+      "maxCommands": { "two": 10, "three": 7 }
+    },
+    "achievement": "act1-complete"
+  }
+}

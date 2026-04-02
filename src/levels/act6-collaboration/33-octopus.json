@@ -1,0 +1,87 @@
+{
+  "id": "act6-33-octopus",
+  "act": 6,
+  "order": 33,
+  "title": "The Merge Octopus",
+  "subtitle": "4 branches with order dependencies, conflicts, and a bug to revert",
+  "difficulty": "expert",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "Integration day. Four branches. But this time, it's not just about resolving conflicts. It's about ORDER.\n\nBranch A changes the database setting. Branch D DEPENDS on A's database change — if you merge D before A, you get a wrong config. Branch B changes the same setting as A — conflict guaranteed. Branch C has two commits: one good, one that introduces a bug.\n\nThe Head Monk draws the dependency map:\n- A must go FIRST (D depends on it)\n- D goes SECOND (clean merge after A)\n- B goes THIRD (conflicts with A on the database setting, must be resolved)\n- C goes LAST (then you must REVERT C's buggy commit)\n\n\"Merge in the wrong order and you'll create unnecessary conflicts. Miss the bug in C and it ships to production. This is why integration is an art, not a recipe.\"\n\nThe cat has four tentacles. Wait, no, it's wearing four scarves. Close enough.",
+    "concept": "Complex integration requires understanding dependencies between branches:\n\n1. Some branches depend on others being merged first\n2. Merge order affects which conflicts arise\n3. After merging, you may need to revert specific buggy commits\n\nStrategy: identify dependencies, plan the merge order, resolve conflicts, then clean up bugs with git revert.",
+    "objectives": [
+      "Merge the 4 branches into main in the correct order",
+      "Resolve the conflict between branch-a and branch-b",
+      "After merging branch-c, revert its buggy commit",
+      "Final config.txt must have correct values from all teams",
+      "The bug file must be reverted"
+    ],
+    "newCommands": []
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "config.txt", "content": "database: sqlite\ncache: none\nsearch: basic\nlogger: console" } },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "application running\nstatus: ok" } },
+      { "command": "add", "args": { "path": "config.txt" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "Initial config" } },
+
+      { "command": "branch", "args": { "name": "branch-a" } },
+      { "command": "branch", "args": { "name": "branch-b" } },
+      { "command": "branch", "args": { "name": "branch-c" } },
+      { "command": "branch", "args": { "name": "branch-d" } },
+
+      { "command": "checkout", "args": { "ref": "branch-a" } },
+      { "command": "writeFile", "args": { "path": "config.txt", "content": "database: postgres\ncache: none\nsearch: basic\nlogger: console" } },
+      { "command": "add", "args": { "path": "config.txt" } },
+      { "command": "commit", "args": { "message": "Upgrade database to postgres" } },
+
+      { "command": "checkout", "args": { "ref": "branch-b" } },
+      { "command": "writeFile", "args": { "path": "config.txt", "content": "database: mysql\ncache: redis\nsearch: basic\nlogger: console" } },
+      { "command": "add", "args": { "path": "config.txt" } },
+      { "command": "commit", "args": { "message": "Add redis cache and mysql" } },
+
+      { "command": "checkout", "args": { "ref": "branch-c" } },
+      { "command": "writeFile", "args": { "path": "config.txt", "content": "database: sqlite\ncache: none\nsearch: elasticsearch\nlogger: console" } },
+      { "command": "add", "args": { "path": "config.txt" } },
+      { "command": "commit", "args": { "message": "Upgrade search to elasticsearch" } },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "application running\nstatus: BROKEN\nbug: infinite loop in search" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "Add search integration (HAS BUG)" } },
+
+      { "command": "checkout", "args": { "ref": "branch-d" } },
+      { "command": "writeFile", "args": { "path": "config.txt", "content": "database: sqlite\ncache: none\nsearch: basic\nlogger: structured" } },
+      { "command": "add", "args": { "path": "config.txt" } },
+      { "command": "commit", "args": { "message": "Upgrade logger to structured logging" } },
+
+      { "command": "checkout", "args": { "ref": "main" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "file-content", "params": { "path": "config.txt", "contains": "postgres" } },
+      { "type": "file-content", "params": { "path": "config.txt", "contains": "redis" } },
+      { "type": "file-content", "params": { "path": "config.txt", "contains": "elasticsearch" } },
+      { "type": "file-content", "params": { "path": "config.txt", "contains": "structured" } },
+      { "type": "file-content", "params": { "path": "app.txt", "notContains": "BROKEN" } },
+      { "type": "file-content", "params": { "path": "app.txt", "contains": "ok" } },
+      { "type": "commit-count", "params": { "min": 8 } },
+      { "type": "staging-empty", "params": {} },
+      { "type": "head-at", "params": { "ref": "main" } }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 25
+  },
+  "hints": [
+    { "trigger": "after-attempts", "triggerValue": 6, "text": "Merge order matters: branch-a first (database upgrade), branch-d second (depends on being after a), branch-b third (conflicts with a's database), branch-c last (then revert its bug).", "penalty": 0.25 },
+    { "trigger": "manual", "text": "1) git merge branch-a. 2) git merge branch-d (resolve: keep postgres + structured). 3) git merge branch-b (resolve: keep postgres + redis). 4) git merge branch-c (resolve: keep all). 5) git revert HEAD~1 --no-edit (reverts the bug commit from C).", "penalty": 1 }
+  ],
+  "rewards": {
+    "stars": { "maxCommands": { "two": 22, "three": 16 } },
+    "achievement": "merge-octopus"
+  }
+}

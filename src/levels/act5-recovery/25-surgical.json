@@ -1,0 +1,58 @@
+{
+  "id": "act5-25-surgical",
+  "act": 5,
+  "order": 25,
+  "title": "Surgical Staging",
+  "subtitle": "Untangle 5 interleaved changes into 5 atomic commits",
+  "difficulty": "advanced",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "The Head Monk stares at code.txt with the intensity of a surgeon reviewing an MRI.\n\n\"Someone — and I won't name names — made FIVE different types of changes to this file and never committed ANY of them. A bugfix. A new feature. A refactor. A performance optimization. And documentation updates. All jumbled together like ingredients in a monastery stew.\"\n\nHe slams the desk. The cat doesn't flinch. The cat has seen worse.\n\n\"Each change must become its own commit. With the RIGHT prefix: Fix:, Feature:, Refactor:, Perf:, Docs:. Five changes. Five commits. The changes are interleaved — a bugfix line next to a feature line next to a refactor. You'll need to think about what each line IS before you stage anything.\"\n\nHe hands you the file. It's a mess. But a beautiful mess, if you squint.\n\n\"Atomic commits aren't just good practice. They're how you make history READABLE. How you make reverts SAFE. How you earn the respect of monks who review your code at 3 AM.\"",
+    "concept": "When a file contains multiple interleaved changes, you must carefully construct each version of the file for each commit. Edit the file to contain ONLY one logical change at a time, commit it, then edit again for the next change.\n\nThis requires understanding what each change IS — not just what it looks like. A bugfix, a feature, a refactor, an optimization, and docs all serve different purposes and belong in different commits.",
+    "objectives": [
+      "Separate the 5 interleaved changes into 5 atomic commits",
+      "Each commit message must use the correct prefix: Fix:, Feature:, Refactor:, Perf:, Docs:",
+      "The final file must contain ALL changes applied correctly",
+      "Changes: division-by-zero fix, power function, rename OLD_calc to calc, cache optimization, JSDoc comments"
+    ],
+    "newCommands": []
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "code.txt", "content": "// Math utilities\nfunction divide(a, b) {\n  return a / b;\n}\n\nfunction OLD_calc(a, b, op) {\n  if (op === 'add') return a + b;\n  if (op === 'sub') return a - b;\n  return 0;\n}\n\nfunction multiply(a, b) {\n  return a * b;\n}" } },
+      { "command": "add", "args": { "path": "code.txt" } },
+      { "command": "commit", "args": { "message": "Initial math utilities" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "commit-count", "params": { "min": 6 } },
+      { "type": "commit-message-contains", "params": { "text": "Fix:" } },
+      { "type": "commit-message-contains", "params": { "text": "Feature:" } },
+      { "type": "commit-message-contains", "params": { "text": "Refactor:" } },
+      { "type": "commit-message-contains", "params": { "text": "Perf:" } },
+      { "type": "commit-message-contains", "params": { "text": "Docs:" } },
+      { "type": "file-content", "params": { "path": "code.txt", "contains": "=== 0" } },
+      { "type": "file-content", "params": { "path": "code.txt", "notContains": "OLD_calc" } },
+      { "type": "file-content", "params": { "path": "code.txt", "contains": "function calc" } },
+      { "type": "file-content", "params": { "path": "code.txt", "contains": "function power" } },
+      { "type": "file-content", "params": { "path": "code.txt", "contains": "cache" } },
+      { "type": "file-content", "params": { "path": "code.txt", "contains": "@param" } },
+      { "type": "staging-empty", "params": {} }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 18
+  },
+  "hints": [
+    { "trigger": "after-attempts", "triggerValue": 5, "text": "A monk whispers: 'Think about it — each commit should transform the file to add ONLY one type of change. Edit, add, commit. Repeat five times.'", "penalty": 0.25 },
+    { "trigger": "manual", "text": "The Scroll of Five Cuts: Make one change at a time. Fix the divide bug first (add zero check). Then rename OLD_calc to calc. Then add the power function. Then add the cache. Then add JSDoc @param comments. Each gets its own commit with the right prefix.", "penalty": 1 }
+  ],
+  "rewards": {
+    "stars": { "maxCommands": { "two": 16, "three": 12 } },
+    "achievement": "surgical-precision"
+  }
+}

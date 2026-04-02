@@ -1,0 +1,70 @@
+{
+  "id": "act4-22-bisect",
+  "act": 4,
+  "order": 22,
+  "title": "The Bisect Hunt",
+  "subtitle": "Binary search through time itself",
+  "difficulty": "advanced",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "Something broke. The monastery's test suite says \"FAIL\" but nobody knows when it started failing. There are 8 commits. Checking each one would take forever (well, eight steps, but monks are impatient).\n\nThe Head Monk pulls out an ancient scroll titled \"The Art of Bisection.\" \"Binary search,\" he says reverently. \"Divide and conquer. Git can do this automatically.\"\n\nYou tell Git: the current commit is BAD (tests fail). The first commit was GOOD (tests passed). Git picks the middle commit. You check if it's good or bad. Git narrows the range. In just 3 steps, you find the exact commit that broke everything.\n\nThe test file is simple: if it says \"PASS\", the commit is good. If it says \"FAIL\", the commit is bad. The break happened at commit 5.\n\nFind the breaking commit, then revert it to fix the tests.",
+    "concept": "git bisect performs a binary search through your commit history to find which commit introduced a bug. Start with 'git bisect start', mark the current state as bad and an old known-good state as good, then Git checks out midpoints for you to test.",
+    "objectives": [
+      "Start a bisect session",
+      "Mark the current commit as bad and the first commit as good",
+      "Test each midpoint commit by checking test.txt",
+      "Let bisect identify the breaking commit",
+      "Reset bisect and revert the bad commit"
+    ],
+    "newCommands": ["git bisect start", "git bisect bad", "git bisect good", "git bisect reset", "git revert <hash>"]
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "test.txt", "content": "PASS" } },
+      { "command": "add", "args": { "path": "test.txt" } },
+      { "command": "commit", "args": { "message": "Commit 1" } },
+      { "command": "writeFile", "args": { "path": "test.txt", "content": "PASS" } },
+      { "command": "add", "args": { "path": "test.txt" } },
+      { "command": "commit", "args": { "message": "Commit 2" } },
+      { "command": "writeFile", "args": { "path": "test.txt", "content": "PASS" } },
+      { "command": "add", "args": { "path": "test.txt" } },
+      { "command": "commit", "args": { "message": "Commit 3" } },
+      { "command": "writeFile", "args": { "path": "test.txt", "content": "PASS" } },
+      { "command": "add", "args": { "path": "test.txt" } },
+      { "command": "commit", "args": { "message": "Commit 4" } },
+      { "command": "writeFile", "args": { "path": "test.txt", "content": "FAIL" } },
+      { "command": "add", "args": { "path": "test.txt" } },
+      { "command": "commit", "args": { "message": "Commit 5" } },
+      { "command": "writeFile", "args": { "path": "test.txt", "content": "FAIL" } },
+      { "command": "add", "args": { "path": "test.txt" } },
+      { "command": "commit", "args": { "message": "Commit 6" } },
+      { "command": "writeFile", "args": { "path": "test.txt", "content": "FAIL" } },
+      { "command": "add", "args": { "path": "test.txt" } },
+      { "command": "commit", "args": { "message": "Commit 7" } },
+      { "command": "writeFile", "args": { "path": "test.txt", "content": "FAIL" } },
+      { "command": "add", "args": { "path": "test.txt" } },
+      { "command": "commit", "args": { "message": "Commit 8" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "file-content", "params": { "path": "test.txt", "contains": "PASS" } },
+      { "type": "commit-count", "params": { "min": 9 } },
+      { "type": "staging-empty", "params": {} }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 15
+  },
+  "hints": [
+    { "trigger": "after-attempts", "triggerValue": 3, "text": "The monastery librarian suggests: 'git bisect start, then mark the current as bad and the first commit as good. Git will guide you from there.'", "penalty": 0.25 },
+    { "trigger": "after-attempts", "triggerValue": 6, "text": "A search manual reads: 'At each midpoint, check test.txt. Mark good or bad accordingly. Once the culprit is found, reset bisect and undo the damage.'", "penalty": 0.5 }
+  ],
+  "rewards": {
+    "stars": { "maxCommands": { "two": 12, "three": 8 } },
+    "achievement": "bisect-hunter"
+  }
+}

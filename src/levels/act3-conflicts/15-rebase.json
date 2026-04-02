@@ -1,0 +1,66 @@
+{
+  "id": "act3-15-rebase",
+  "act": 3,
+  "order": 15,
+  "title": "Rebase: The Straight Line",
+  "subtitle": "Linearize your history like a proper monk",
+  "difficulty": "intermediate",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "The monastery's git log looks like a plate of spaghetti. Branches diverge, merge, cross over, and loop back in ways that would make Escher weep.\n\nThe Head Monk calls a meeting. He projects the git graph onto the meditation hall wall. Several junior monks faint.\n\n\"From now on,\" he announces, \"we rebase. No more merge commits cluttering our history. Straight lines. Clean history. Like a well-raked zen garden.\"\n\nHe turns to you. \"Your feature branch has fallen behind main. Two new commits landed. Rebase your work on top, then fast-forward merge. Show them the straight line.\"\n\nThe cat nods approvingly. Even cats prefer linear history.",
+    "concept": "git rebase replays your branch's commits on top of another branch, creating a linear history. Unlike merge, it doesn't create a merge commit. After rebasing feature onto main, you can fast-forward merge for a perfectly straight history line.",
+    "objectives": [
+      "Rebase the feature branch onto main",
+      "Switch to main",
+      "Fast-forward merge feature into main"
+    ],
+    "newCommands": ["git rebase <branch>"]
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "base.txt", "content": "base" } },
+      { "command": "add", "args": { "path": "base.txt" } },
+      { "command": "commit", "args": { "message": "Initial" } },
+      { "command": "branch", "args": { "name": "feature" } },
+      { "command": "checkout", "args": { "ref": "feature" } },
+      { "command": "writeFile", "args": { "path": "feature.txt", "content": "feature work" } },
+      { "command": "add", "args": { "path": "feature.txt" } },
+      { "command": "commit", "args": { "message": "Add feature" } },
+      { "command": "writeFile", "args": { "path": "feature.txt", "content": "feature work v2" } },
+      { "command": "add", "args": { "path": "feature.txt" } },
+      { "command": "commit", "args": { "message": "Improve feature" } },
+      { "command": "checkout", "args": { "ref": "main" } },
+      { "command": "writeFile", "args": { "path": "hotfix.txt", "content": "fix" } },
+      { "command": "add", "args": { "path": "hotfix.txt" } },
+      { "command": "commit", "args": { "message": "Hotfix on main" } },
+      { "command": "writeFile", "args": { "path": "update.txt", "content": "update" } },
+      { "command": "add", "args": { "path": "update.txt" } },
+      { "command": "commit", "args": { "message": "Update on main" } },
+      { "command": "checkout", "args": { "ref": "feature" } }
+    ],
+    "head": "feature"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "head-at", "params": { "ref": "main" } },
+      { "type": "commit-count", "params": { "min": 5 } },
+      { "type": "staging-empty", "params": {} },
+      { "type": "file-exists", "params": { "path": "feature.txt" } },
+      { "type": "file-exists", "params": { "path": "hotfix.txt" } }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 6
+  },
+  "hints": [
+    { "trigger": "after-attempts", "triggerValue": 3, "text": "The zen garden raker pauses: 'While on feature, run git rebase main to replay your commits on top of main's latest.'", "penalty": 0.25 },
+    { "trigger": "after-attempts", "triggerValue": 5, "text": "A scroll in the garden reads: 'git rebase main, then git checkout main, then git merge feature. Three steps to linear enlightenment.'", "penalty": 0.5 },
+    { "trigger": "manual", "text": "The cat rakes the garden for you: git rebase main && git checkout main && git merge feature", "penalty": 1 }
+  ],
+  "rewards": {
+    "stars": { "maxCommands": { "two": 5, "three": 3 } },
+    "achievement": "straight-line"
+  }
+}

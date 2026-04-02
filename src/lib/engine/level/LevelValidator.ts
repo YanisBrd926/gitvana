@@ -1,0 +1,308 @@
+import git from 'isomorphic-git';
+import type { GitEngine } from '../git/GitEngine.js';
+import type { ValidatorConfig, ValidationResult } from '../../../levels/schema.js';
+
+export class LevelValidator {
+  constructor(private engine: GitEngine) {}
+
+  async validate(validators: ValidatorConfig[]): Promise<ValidationResult> {
+    const results = [];
+
+    for (const validator of validators) {
+      const result = await this.runValidator(validator);
+      results.push(result);
+    }
+
+    return {
+      passed: results.every((r) => r.passed),
+      results,
+    };
+  }
+
+  private async runValidator(
+    validator: ValidatorConfig,
+  ): Promise<{ validator: ValidatorConfig; passed: boolean; message: string }> {
+    try {
+      switch (validator.type) {
+        case 'file-exists':
+          return await this.validateFileExists(validator);
+        case 'file-content':
+          return await this.validateFileContent(validator);
+        case 'branch-exists':
+          return await this.validateBranchExists(validator);
+        case 'head-at':
+          return await this.validateHeadAt(validator);
+        case 'commit-count':
+          return await this.validateCommitCount(validator);
+        case 'staging-empty':
+          return await this.validateStagingEmpty(validator);
+        case 'commit-message-contains':
+          return await this.validateCommitMessage(validator);
+        case 'merge-commit-exists':
+          return await this.validateMergeCommitExists(validator);
+        case 'no-conflicts':
+          return await this.validateNoConflicts(validator);
+        case 'branch-deleted':
+          return await this.validateBranchDeleted(validator);
+        case 'tag-exists':
+          return await this.validateTagExists(validator);
+        default:
+          return { validator, passed: false, message: `Unknown validator: ${validator.type}` };
+      }
+    } catch (err) {
+      return {
+        validator,
+        passed: false,
+        message: err instanceof Error ? err.message : String(err),
+      };
+    }
+  }
+
+  private async validateFileExists(
+    validator: ValidatorConfig,
+  ): Promise<{ validator: ValidatorConfig; passed: boolean; message: string }> {
+    const { path, tracked } = validator.params as { path: string; tracked?: boolean };
+    const fullPath = `${this.engine.dir}/${path}`;
+
+    try {
+      await this.engine.fs.promises.stat(fullPath);
+    } catch {
+      return { validator, passed: false, message: `File '${path}' does not exist` };
+    }
+
+    if (tracked === false) {
+      // File should exist but NOT be tracked
+      try {
+        const matrix = await git.statusMatrix({ fs: this.engine.fs, dir: this.engine.dir });
+        const entry = matrix.find(([f]) => f === path);
+        if (entry && entry[3] !== 0) {
+          return { validator, passed: false, message: `File '${path}' should not be tracked` };
+        }
+      } catch {
+        // statusMatrix fails on repos with no commits — nothing is tracked
+      }
+    }
+
+    return { validator, passed: true, message: `File '${path}' exists` };
+  }
+
+  private async validateFileContent(
+    validator: ValidatorConfig,
+  ): Promise<{ validator: ValidatorConfig; passed: boolean; message: string }> {
+    const { path, contains, containsAlso, notContains, equals } = validator.params as {
+      path: string;
+      contains?: string;
+      containsAlso?: string;
+      notContains?: string;
+      equals?: string;
+    };
+    const fullPath = `${this.engine.dir}/${path}`;
+
+    try {
+      const content = (await this.engine.fs.promises.readFile(fullPath, 'utf8')) as string;
+
+      if (equals !== undefined && content.trim() !== equals.trim()) {
+        return { validator, passed: false, message: `File '${path}' content doesn't match expected` };
+      }
+
+      if (contains !== undefined && !content.includes(contains)) {
+        return { validator, passed: false, message: `File '${path}' doesn't contain '${contains}'` };
+      }
+
+      if (containsAlso !== undefined && !content.includes(containsAlso)) {
+        return { validator, passed: false, message: `File '${path}' doesn't contain '${containsAlso}'` };
+      }
+
+      if (notContains !== undefined && content.includes(notContains)) {
+        return { validator, passed: false, message: `File '${path}' should not contain '${notContains}'` };
+      }
+
+      return { validator, passed: true, message: `File '${path}' content matches` };
+    } catch {
+      return { validator, passed: false, message: `Cannot read file '${path}'` };
+    }
+  }
+
+  private async validateBranchExists(
+    validator: ValidatorConfig,
+  ): Promise<{ validator: ValidatorConfig; passed: boolean; message: string }> {
+    const { name } = validator.params as { name: string };
+    try {
+      const branches = await git.listBranches({ fs: this.engine.fs, dir: this.engine.dir });
+      const exists = branches.includes(name);
+      return {
+        validator,
+        passed: exists,
+        message: exists ? `Branch '${name}' exists` : `Branch '${name}' not found`,
+      };
+    } catch {
+      return { validator, passed: false, message: `Branch '${name}' not found` };
+    }
+  }
+
+  private async validateHeadAt(
+    validator: ValidatorConfig,
+  ): Promise<{ validator: ValidatorConfig; passed: boolean; message: string }> {
+    const params = validator.params as { branch?: string; ref?: string };
+    const target = params.branch || params.ref || 'main';
+    try {
+      const current = await git.currentBranch({ fs: this.engine.fs, dir: this.engine.dir });
+      const match = current === target;
+      return {
+        validator,
+        passed: match,
+        message: match ? `HEAD is at '${target}'` : `HEAD is at '${current}', expected '${target}'`,
+      };
+    } catch {
+      return { validator, passed: false, message: `HEAD not found` };
+    }
+  }
+
+  private async validateCommitCount(
+    validator: ValidatorConfig,
+  ): Promise<{ validator: ValidatorConfig; passed: boolean; message: string }> {
+    const params = validator.params as { branch?: string; count?: number; min?: number };
+    const branch = params.branch;
+    const required = params.count ?? params.min ?? 0;
+
+    try {
+      const ref = branch || 'HEAD';
+      const commits = await git.log({ fs: this.engine.fs, dir: this.engine.dir, ref });
+      const match = commits.length >= required;
+      return {
+        validator,
+        passed: match,
+        message: match
+          ? `${commits.length} commits (need ${required})`
+          : `Only ${commits.length} commits, need ${required}`,
+      };
+    } catch {
+      return { validator, passed: required === 0, message: `Need ${required} commit${required === 1 ? '' : 's'}` };
+    }
+  }
+
+  private async validateStagingEmpty(
+    validator: ValidatorConfig,
+  ): Promise<{ validator: ValidatorConfig; passed: boolean; message: string }> {
+    try {
+      const matrix = await git.statusMatrix({ fs: this.engine.fs, dir: this.engine.dir });
+      const staged = matrix.filter(([, head, , stage]) => head !== stage);
+      const empty = staged.length === 0;
+      return {
+        validator,
+        passed: empty,
+        message: empty ? 'Staging area is empty' : `${staged.length} files still staged`,
+      };
+    } catch {
+      // No commits yet — check index directly
+      try {
+        const indexed = await git.listFiles({ fs: this.engine.fs, dir: this.engine.dir });
+        const empty = indexed.length === 0;
+        return {
+          validator,
+          passed: empty,
+          message: empty ? 'Staging area is empty' : `${indexed.length} files staged`,
+        };
+      } catch {
+        return { validator, passed: true, message: 'Staging area is empty' };
+      }
+    }
+  }
+
+  private async validateCommitMessage(
+    validator: ValidatorConfig,
+  ): Promise<{ validator: ValidatorConfig; passed: boolean; message: string }> {
+    const params = validator.params as { message?: string; text?: string };
+    const needle = params.message || params.text || '';
+
+    try {
+      const commits = await git.log({ fs: this.engine.fs, dir: this.engine.dir, depth: 50 });
+      if (commits.length === 0) {
+        return { validator, passed: false, message: `Need commit with '${needle}'` };
+      }
+
+      const found = commits.some((c) =>
+        c.commit.message.toLowerCase().includes(needle.toLowerCase()),
+      );
+      return {
+        validator,
+        passed: found,
+        message: found
+          ? 'Commit message matches'
+          : `No commit message contains '${needle}'`,
+      };
+    } catch {
+      return { validator, passed: false, message: `Need commit with '${needle}'` };
+    }
+  }
+
+  private async validateMergeCommitExists(
+    validator: ValidatorConfig,
+  ): Promise<{ validator: ValidatorConfig; passed: boolean; message: string }> {
+    try {
+      const commits = await git.log({ fs: this.engine.fs, dir: this.engine.dir, depth: 20 });
+      const mergeCommit = commits.find((c) => c.commit.parent.length >= 2);
+      if (mergeCommit) {
+        return { validator, passed: true, message: 'Merge commit found' };
+      }
+      return { validator, passed: false, message: 'No merge commit found' };
+    } catch {
+      return { validator, passed: false, message: 'No merge commit found' };
+    }
+  }
+
+  private async validateNoConflicts(
+    validator: ValidatorConfig,
+  ): Promise<{ validator: ValidatorConfig; passed: boolean; message: string }> {
+    try {
+      // Check if any file in working dir still has conflict markers
+      const entries = await this.engine.fs.promises.readdir(this.engine.dir) as string[];
+      for (const entry of entries) {
+        if (entry === '.git') continue;
+        try {
+          const content = await this.engine.fs.promises.readFile(`${this.engine.dir}/${entry}`, 'utf8') as string;
+          if (content.includes('<<<<<<<') || content.includes('>>>>>>>')) {
+            return { validator, passed: false, message: `File '${entry}' still has conflict markers` };
+          }
+        } catch { /* skip non-readable */ }
+      }
+      return { validator, passed: true, message: 'No conflict markers found' };
+    } catch {
+      return { validator, passed: true, message: 'No conflict markers found' };
+    }
+  }
+
+  private async validateBranchDeleted(
+    validator: ValidatorConfig,
+  ): Promise<{ validator: ValidatorConfig; passed: boolean; message: string }> {
+    const { name } = validator.params as { name: string };
+    try {
+      const branches = await git.listBranches({ fs: this.engine.fs, dir: this.engine.dir });
+      const exists = branches.includes(name);
+      return {
+        validator,
+        passed: !exists,
+        message: exists ? `Branch '${name}' still exists` : `Branch '${name}' deleted`,
+      };
+    } catch {
+      return { validator, passed: true, message: `Branch '${name}' deleted` };
+    }
+  }
+
+  private async validateTagExists(
+    validator: ValidatorConfig,
+  ): Promise<{ validator: ValidatorConfig; passed: boolean; message: string }> {
+    const { name } = validator.params as { name: string };
+    try {
+      const tags = await git.listTags({ fs: this.engine.fs, dir: this.engine.dir });
+      const exists = tags.includes(name);
+      return {
+        validator,
+        passed: exists,
+        message: exists ? `Tag '${name}' exists` : `Tag '${name}' not found`,
+      };
+    } catch {
+      return { validator, passed: false, message: `Tag '${name}' not found` };
+    }
+  }
+}

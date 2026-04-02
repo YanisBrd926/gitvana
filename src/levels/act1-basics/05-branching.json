@@ -1,0 +1,67 @@
+{
+  "id": "act1-05-branching",
+  "act": 1,
+  "order": 5,
+  "title": "Branching Realities",
+  "subtitle": "One repo, many timelines",
+  "difficulty": "beginner",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "The monastery's philosophy instructor — a monk who speaks entirely in metaphors — summons you to the garden of forking paths.\n\n\"Imagine,\" he says, gesturing at a bonsai tree, \"that you could live two lives simultaneously. In one, you become a baker. In the other, a poet. Git branches are exactly this — parallel realities where different work happens without interfering.\"\n\nHe prunes a branch from the bonsai. \"Create two feature branches. Make different commits on each. Then return to main. Observe how each branch holds its own truth.\"\n\nThe monastery cat is sitting in the bonsai tree. Nobody knows how it got there.",
+    "concept": "Branches let you work on different things without affecting each other. git branch <name> creates a new branch. git checkout <name> switches to it. Each branch has its own commit history that diverges from the point where it was created. You can switch between branches freely.",
+    "objectives": [
+      "Create a branch called 'feature-a'",
+      "Switch to feature-a and make at least one commit",
+      "Create a branch called 'feature-b' (from main)",
+      "Switch to feature-b and make at least one commit",
+      "Return to main and merge one of the feature branches"
+    ],
+    "newCommands": ["git branch <name>", "git checkout <name>"]
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "base.txt", "content": "The monastery stands eternal." } },
+      { "command": "add", "args": { "path": "base.txt" } },
+      { "command": "commit", "args": { "message": "Initial" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "branch-exists", "params": { "name": "feature-a" } },
+      { "type": "branch-exists", "params": { "name": "feature-b" } },
+      { "type": "commit-count", "params": { "min": 2 } },
+      { "type": "head-at", "params": { "branch": "main" } }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 15
+  },
+  "hints": [
+    {
+      "trigger": "after-attempts",
+      "triggerValue": 4,
+      "text": "The philosophy monk strokes his beard: 'git branch feature-a creates the branch. git checkout feature-a switches to it. Then make a file and commit.'",
+      "penalty": 0.25
+    },
+    {
+      "trigger": "after-attempts",
+      "triggerValue": 7,
+      "text": "A passing monk sketches in the sand: 'After committing on feature-a, go back to main with git checkout main. Then git branch feature-b, git checkout feature-b, commit something, and git checkout main again.'",
+      "penalty": 0.5
+    },
+    {
+      "trigger": "manual",
+      "text": "The monastery cat meows the solution: git checkout -b feature-a && echo \"feature a\" > a.txt && git add a.txt && git commit -m \"Add feature a\" && git checkout main && git checkout -b feature-b && echo \"feature b\" > b.txt && git add b.txt && git commit -m \"Add feature b\" && git checkout main",
+      "penalty": 1
+    }
+  ],
+  "rewards": {
+    "stars": {
+      "maxCommands": { "two": 13, "three": 10 }
+    },
+    "achievement": "branch-creator"
+  }
+}

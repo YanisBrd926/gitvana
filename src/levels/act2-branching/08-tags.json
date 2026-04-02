@@ -1,0 +1,78 @@
+{
+  "id": "act2-08-tags",
+  "act": 2,
+  "order": 8,
+  "title": "Marking Milestones",
+  "subtitle": "Some commits deserve a name",
+  "difficulty": "intermediate",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "The monastery's release manager — a monk who wears a different colored robe for every version number — is in a state of distress.\n\n\"We have SIX commits in this repository,\" he says, clutching a color chart, \"and NOT A SINGLE TAG. How are future monks supposed to know which commit was the v1.0 release? Or the v2.0 release? Are we ANIMALS?\"\n\nHe calms himself. \"Tag the third commit as v1.0 — that's when the monastery website first launched. Then tag HEAD as v2.0 with an annotated tag and a message. Annotated tags are the formal ones. They have history. Gravitas.\"\n\nThe monastery cat is wearing a tiny version badge. It reads 'v9.0'. Nobody gave it that badge.",
+    "concept": "Tags are permanent labels for specific commits — like bookmarks in history. Lightweight tags (git tag v1.0 <commit>) are simple pointers. Annotated tags (git tag -a v2.0 -m 'message') include metadata like the tagger's name and date. Use tags for releases and milestones.",
+    "objectives": [
+      "Use 'git log --oneline' to find the commits",
+      "Tag the 3rd commit from HEAD (HEAD~3) as 'v1.0'",
+      "Tag the current HEAD as 'v2.0' with an annotated tag"
+    ],
+    "newCommands": ["git tag <name>", "git tag <name> <commit>", "git tag -a <name> -m '<message>'"]
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "v0.1 - just an idea" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "Initial idea" } },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "v0.2 - basic structure" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "Add structure" } },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "v1.0 - first release!" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "First release" } },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "v1.1 - bug fixes" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "Bug fixes" } },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "v1.2 - more fixes" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "More fixes" } },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "v2.0 - major update" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "Major update" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "tag-exists", "params": { "name": "v1.0" } },
+      { "type": "tag-exists", "params": { "name": "v2.0" } }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 6
+  },
+  "hints": [
+    {
+      "trigger": "after-attempts",
+      "triggerValue": 2,
+      "text": "The release manager adjusts his robe: 'Use git log --oneline to see the commits. The third from the top is HEAD~3. Tag it with git tag v1.0 HEAD~3.'",
+      "penalty": 0.25
+    },
+    {
+      "trigger": "after-attempts",
+      "triggerValue": 4,
+      "text": "A passing monk holds up two fingers: 'Lightweight tag: git tag v1.0 HEAD~3. Annotated tag: git tag -a v2.0 -m \"Release 2.0\". Two commands, two tags, two versions of enlightenment.'",
+      "penalty": 0.5
+    },
+    {
+      "trigger": "manual",
+      "text": "The monastery cat bats at a version badge and types: git tag v1.0 HEAD~3 && git tag -a v2.0 -m \"Release 2.0\"",
+      "penalty": 1
+    }
+  ],
+  "rewards": {
+    "stars": {
+      "maxCommands": { "two": 5, "three": 3 }
+    },
+    "achievement": "tag-master"
+  }
+}

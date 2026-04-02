@@ -1,0 +1,92 @@
+{
+  "id": "act5-30-boss",
+  "act": 5,
+  "order": 30,
+  "title": "The Open Source Gauntlet",
+  "subtitle": "Examine, split, amend, cherry-pick, rebase, merge, tag — the full workflow",
+  "difficulty": "expert",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "You've been contributing to MonkOS, the legendary open-source operating system written entirely by monks. The maintainer just posted a scathing review:\n\n\"Your feature branch is a MESS. 5 commits: 3 are fine, 1 has a typo in the commit message, and 1 mixes a bugfix with a feature. Meanwhile main moved forward with new releases. Oh, and there's a contributor-fix branch with a dependency you need.\"\n\nThe maintainer's checklist:\n1. Examine the repo — understand what's where\n2. Fix the commit message typo (amend the second commit)\n3. Split the mixed commit into separate bugfix and feature commits\n4. Cherry-pick the contributor's fix\n5. Rebase onto main (conflict expected)\n6. Merge into main and tag v3.0\n\nThe Head Monk watches from the shadows. \"This is what real open-source contribution looks like. Not a tutorial. A battlefield.\"\n\nThe cat has 47 merged PRs. It says nothing.",
+    "concept": "Real open-source contribution requires mastering the full Git workflow in combination:\n- git log/show to understand the repo state\n- git commit --amend to fix commit messages\n- git reset + recommit to split commits\n- git cherry-pick to grab fixes from other branches\n- git rebase to update your branch\n- git merge + git tag for the final release\n\nThe challenge is doing all of these in the right order without creating a mess.",
+    "objectives": [
+      "Examine the repo to understand what needs fixing",
+      "Fix the typo in the commit message (the one that says 'Add netwerk module')",
+      "Cherry-pick the contributor's fix from contributor-fix branch",
+      "Rebase your feature branch onto main (resolve the conflict)",
+      "Merge into main and tag as v3.0"
+    ],
+    "newCommands": []
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "monkos.txt", "content": "MonkOS v1.0\nKernel: meditation-core\nStatus: stable" } },
+      { "command": "writeFile", "args": { "path": "modules.txt", "content": "core\nmeditation" } },
+      { "command": "add", "args": { "path": "monkos.txt" } },
+      { "command": "add", "args": { "path": "modules.txt" } },
+      { "command": "commit", "args": { "message": "MonkOS v1.0 release" } },
+
+      { "command": "writeFile", "args": { "path": "monkos.txt", "content": "MonkOS v1.0\nKernel: meditation-core\nStatus: stable\nTea module: loaded" } },
+      { "command": "writeFile", "args": { "path": "modules.txt", "content": "core\nmeditation\ntea-brewing" } },
+      { "command": "add", "args": { "path": "monkos.txt" } },
+      { "command": "add", "args": { "path": "modules.txt" } },
+      { "command": "commit", "args": { "message": "Add tea-brewing module" } },
+
+      { "command": "writeFile", "args": { "path": "monkos.txt", "content": "MonkOS v2.0\nKernel: meditation-core-v2\nStatus: stable\nTea module: loaded\nScheduler: upgraded" } },
+      { "command": "add", "args": { "path": "monkos.txt" } },
+      { "command": "commit", "args": { "message": "MonkOS v2.0 release" } },
+
+      { "command": "branch", "args": { "name": "feature-garden" } },
+      { "command": "branch", "args": { "name": "contributor-fix" } },
+
+      { "command": "checkout", "args": { "ref": "contributor-fix" } },
+      { "command": "writeFile", "args": { "path": "bugfix.txt", "content": "Fixed: tea timer overflow\nPriority: critical\nContributor: Brother Patch" } },
+      { "command": "add", "args": { "path": "bugfix.txt" } },
+      { "command": "commit", "args": { "message": "Fix tea timer overflow" } },
+
+      { "command": "checkout", "args": { "ref": "main" } },
+      { "command": "writeFile", "args": { "path": "monkos.txt", "content": "MonkOS v2.1\nKernel: meditation-core-v2\nStatus: stable\nTea module: loaded\nScheduler: upgraded\nSecurity: hardened" } },
+      { "command": "add", "args": { "path": "monkos.txt" } },
+      { "command": "commit", "args": { "message": "Security hardening patch" } },
+
+      { "command": "checkout", "args": { "ref": "feature-garden" } },
+      { "command": "writeFile", "args": { "path": "garden.txt", "content": "Garden module v1.0\nFeatures: planting, watering" } },
+      { "command": "add", "args": { "path": "garden.txt" } },
+      { "command": "commit", "args": { "message": "Add garden module" } },
+      { "command": "writeFile", "args": { "path": "network.txt", "content": "Network module\nProtocol: monastery-net" } },
+      { "command": "add", "args": { "path": "network.txt" } },
+      { "command": "commit", "args": { "message": "Add netwerk module" } },
+      { "command": "writeFile", "args": { "path": "modules.txt", "content": "core\nmeditation\ntea-brewing\ngarden\nnetwork" } },
+      { "command": "add", "args": { "path": "modules.txt" } },
+      { "command": "commit", "args": { "message": "Register new modules" } }
+    ],
+    "head": "feature-garden"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "tag-exists", "params": { "name": "v3.0" } },
+      { "type": "head-at", "params": { "ref": "main" } },
+      { "type": "file-exists", "params": { "path": "garden.txt" } },
+      { "type": "file-exists", "params": { "path": "network.txt" } },
+      { "type": "file-exists", "params": { "path": "bugfix.txt" } },
+      { "type": "file-content", "params": { "path": "monkos.txt", "contains": "Security" } },
+      { "type": "file-content", "params": { "path": "modules.txt", "contains": "garden" } },
+      { "type": "file-content", "params": { "path": "modules.txt", "contains": "network" } },
+      { "type": "commit-message-contains", "params": { "text": "network module" } },
+      { "type": "commit-count", "params": { "min": 7 } },
+      { "type": "staging-empty", "params": {} }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 35
+  },
+  "hints": [
+    { "trigger": "after-attempts", "triggerValue": 8, "text": "Start by examining the repo: git log --oneline, git log contributor-fix. Then fix the typo with git commit --amend. Cherry-pick the contributor fix. Rebase onto main.", "penalty": 0.5 }
+  ],
+  "rewards": {
+    "stars": { "maxCommands": { "two": 28, "three": 18 } },
+    "achievement": "open-source-gauntlet"
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "id": "act2-10-revert",
+  "act": 2,
+  "order": 10,
+  "title": "Take It Back",
+  "subtitle": "Undo without rewriting history",
+  "difficulty": "intermediate",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "The monastery's security monk — a paranoid individual who puts locks on locks — is pacing the server room.\n\n\"Someone committed our SECRET to the config file. And then someone ELSE committed a perfectly good readme on top of it. We can't just reset — that would destroy the readme commit. We need to surgically UNDO the bad config change without touching anything else.\"\n\nHe slams his fist on the table. \"This is why I wanted to use carrier pigeons instead of git. Pigeons don't leak secrets.\"\n\nThe monastery cat disagrees. It has intercepted many pigeons.",
+    "concept": "git revert <commit> creates a NEW commit that undoes the changes from a specific commit. Unlike reset, revert doesn't rewrite history — it adds to it. This makes it safe for shared/published branches where you can't rewrite commits others have already pulled.",
+    "objectives": [
+      "Use 'git log' to find the commit that leaked the secret",
+      "Revert the bad config change (the 'Oops' commit) using git revert",
+      "The config.txt must be restored (debug: false, no SECRET)",
+      "The readme.txt must still exist (don't lose later commits)"
+    ],
+    "newCommands": ["git revert <commit>"]
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "config.txt", "content": "debug: false\nport: 3000" } },
+      { "command": "add", "args": { "path": "config.txt" } },
+      { "command": "commit", "args": { "message": "Initial config" } },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "app code here" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "Add app" } },
+      { "command": "writeFile", "args": { "path": "config.txt", "content": "debug: true\nport: 3000\nSECRET: exposed!" } },
+      { "command": "add", "args": { "path": "config.txt" } },
+      { "command": "commit", "args": { "message": "Oops: bad config change" } },
+      { "command": "writeFile", "args": { "path": "readme.txt", "content": "Welcome to the monastery app" } },
+      { "command": "add", "args": { "path": "readme.txt" } },
+      { "command": "commit", "args": { "message": "Add readme" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "file-content", "params": { "path": "config.txt", "contains": "debug: false", "notContains": "SECRET" } },
+      { "type": "file-exists", "params": { "path": "readme.txt" } },
+      { "type": "commit-count", "params": { "min": 5 } },
+      { "type": "staging-empty", "params": {} }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 4
+  },
+  "hints": [
+    {
+      "trigger": "after-attempts",
+      "triggerValue": 2,
+      "text": "The security monk checks his locks: 'Use git log --oneline to find the bad commit. It says \"Oops: bad config change\". Note its hash, or use HEAD~1 since it is the second-to-last commit.'",
+      "penalty": 0.25
+    },
+    {
+      "trigger": "after-attempts",
+      "triggerValue": 3,
+      "text": "A passing monk in a trenchcoat whispers: 'git revert HEAD~1 will create a new commit that undoes the changes from that specific commit. The readme stays safe.'",
+      "penalty": 0.5
+    },
+    {
+      "trigger": "manual",
+      "text": "The monastery cat types while looking over its shoulder: git revert HEAD~1 --no-edit",
+      "penalty": 1
+    }
+  ],
+  "rewards": {
+    "stars": {
+      "maxCommands": { "two": 3, "three": 2 }
+    },
+    "achievement": "safe-reverter"
+  }
+}

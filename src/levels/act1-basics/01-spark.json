@@ -1,0 +1,59 @@
+{
+  "id": "act1-01-spark",
+  "act": 1,
+  "order": 1,
+  "title": "The Spark",
+  "subtitle": "Something from nothing",
+  "difficulty": "beginner",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "You arrive at the Monastery of Version Control on a rainy Tuesday. The Head Monk, a weathered figure who claims to have invented the semicolon, blocks the gate.\n\n\"Before you may enter,\" he intones, \"you must prove you can create Something From Nothing. Initialize a repository, write a file, and commit it. The universe began with less.\"\n\nHe pauses. \"Also, the kitchen desperately needs a grocery list. Long story. Don't ask.\"",
+    "concept": "git init creates a new Git repository in the current directory. Think of it as founding a monastery — nothing is tracked until someone takes the first step. git add stages a file, marking it for inclusion in the next commit. git commit saves a permanent snapshot of everything that's staged.",
+    "objectives": [
+      "Initialize a new git repository with 'git init'",
+      "Create a file (any name, any content)",
+      "Stage the file with 'git add'",
+      "Create your first commit"
+    ],
+    "newCommands": ["git init", "git add <file>", "git commit -m '<message>'"]
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "commit-count", "params": { "min": 1 } },
+      { "type": "staging-empty", "params": {} }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 6
+  },
+  "hints": [
+    {
+      "trigger": "after-attempts",
+      "triggerValue": 3,
+      "text": "The Head Monk leans in conspiratorially: 'Start with git init. Then create a file. Any file. echo \"hello\" > hello.txt works fine.'",
+      "penalty": 0.25
+    },
+    {
+      "trigger": "after-attempts",
+      "triggerValue": 5,
+      "text": "A passing monk drops a scroll at your feet: 'git add <file> stages it. git commit -m \"message\" saves it. That is the way.'",
+      "penalty": 0.5
+    },
+    {
+      "trigger": "manual",
+      "text": "The monastery cat walks across your keyboard and somehow types: git init && echo \"hello\" > hello.txt && git add hello.txt && git commit -m \"First commit\"",
+      "penalty": 1
+    }
+  ],
+  "rewards": {
+    "stars": {
+      "maxCommands": { "two": 5, "three": 4 }
+    },
+    "achievement": "first-commit"
+  }
+}

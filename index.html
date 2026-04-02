@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script defer src="https://analytics.pixari.dev/script.js" data-website-id="33bafdac-20f0-4aa7-bcaa-1c1a88b13535"></script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;700&display=swap" as="style" />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+    <title>Gitvana — Learn git by playing | Free browser game</title>
+    <meta name="description" content="Learn git by playing. Type real git commands in a retro terminal. 35 levels from git init to merge conflicts to disaster recovery. Free forever, zero setup." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://gitvana.pixari.dev" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Gitvana",
+      "url": "https://gitvana.pixari.dev",
+      "description": "A browser game that teaches git through real terminal commands. 35 levels from init to mastery.",
+      "applicationCategory": "EducationalGame",
+      "operatingSystem": "Web Browser",
+      "offers": { "@type": "Offer", "price": "0" },
+      "author": {
+        "@type": "Person",
+        "name": "Raffaele Pizzari",
+        "url": "https://pixari.dev"
+      }
+    }
+    </script>
+    <meta property="og:title" content="Gitvana — Reach git enlightenment" />
+    <meta property="og:description" content="A browser game that teaches git through real terminal commands. 35 levels from beginner to master." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://gitvana.pixari.dev" />
+    <meta property="og:image" content="https://gitvana.pixari.dev/og-default.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Gitvana — Reach git enlightenment" />
+    <meta name="twitter:description" content="Learn git by playing. 35 levels of terminal-based puzzles." />
+    <meta name="twitter:image" content="https://gitvana.pixari.dev/og-default.png" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body, #app { height: 100%; width: 100%; overflow: hidden; background: #0a0a0a; }
+      html { min-height: 500px; min-width: 800px; }
+      .mobile-fallback { display: none; }
+      @media (max-width: 799px), (max-height: 499px) {
+        html { min-height: unset; min-width: unset; }
+        #app { display: none !important; }
+        .mobile-fallback {
+          display: flex; flex-direction: column; align-items: center; justify-content: center;
+          height: 100vh; width: 100vw; background: #0a0a0a; color: #c2c3c7;
+          font-family: 'JetBrains Mono', 'Consolas', monospace; text-align: center; padding: 32px;
+        }
+        .mobile-fallback h1 { font-family: 'Press Start 2P', monospace; font-size: 18px; color: #ffa300; margin-bottom: 16px; line-height: 1.5; }
+        .mobile-fallback p { font-size: 14px; line-height: 1.6; margin-bottom: 12px; color: #5f574f; }
+        .mobile-fallback .emoji { font-size: 48px; margin-bottom: 20px; }
+        .mobile-fallback a { color: #29adff; text-decoration: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="mobile-fallback">
+      <div class="emoji">🖥️</div>
+      <h1>GITVANA</h1>
+      <p>Gitvana needs a keyboard and a wider screen.<br/>Please visit on a desktop or laptop.</p>
+      <p>The monastery terminal doesn't fit in your pocket.<br/>The monks tried. It didn't end well.</p>
+      <p><a href="https://gitvana.pixari.dev">gitvana.pixari.dev</a></p>
+    </div>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

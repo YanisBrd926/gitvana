@@ -1,0 +1,61 @@
+{
+  "id": "act3-16-rebase-conflict",
+  "act": 3,
+  "order": 16,
+  "title": "Rebase Conflict",
+  "subtitle": "The straight line has a bump in it",
+  "difficulty": "advanced",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "You thought rebasing was all smooth sailing after the last level. The Head Monk smiles that knowing smile.\n\n\"Now do it again,\" he says, \"but this time, both branches touched config.txt.\"\n\nYour blood runs cold. You changed the port to 8080. Someone on main changed it to 4000. When you rebase, Git won't know which port to keep. It will stop mid-rebase, drop conflict markers in the file, and wait for you to decide.\n\nThis is the rebase conflict. It's like a merge conflict, but it happens commit-by-commit as Git replays your work. Resolve it, then continue the rebase.\n\nThe monastery's server is waiting for the correct port number. No pressure.",
+    "concept": "During a rebase, if a replayed commit conflicts with the target branch, Git pauses and asks you to resolve. After fixing the file: git add the resolved file, then git rebase --continue to resume replaying the remaining commits.",
+    "objectives": [
+      "Attempt to rebase feature onto main",
+      "Resolve the conflict in config.txt",
+      "Stage the resolved file and continue the rebase"
+    ],
+    "newCommands": ["git rebase --continue", "git rebase --abort"]
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "config.txt", "content": "port: 3000" } },
+      { "command": "add", "args": { "path": "config.txt" } },
+      { "command": "commit", "args": { "message": "Initial config" } },
+      { "command": "branch", "args": { "name": "feature" } },
+      { "command": "checkout", "args": { "ref": "feature" } },
+      { "command": "writeFile", "args": { "path": "config.txt", "content": "port: 8080" } },
+      { "command": "add", "args": { "path": "config.txt" } },
+      { "command": "commit", "args": { "message": "Change port to 8080" } },
+      { "command": "writeFile", "args": { "path": "feature.txt", "content": "feature" } },
+      { "command": "add", "args": { "path": "feature.txt" } },
+      { "command": "commit", "args": { "message": "Add feature" } },
+      { "command": "checkout", "args": { "ref": "main" } },
+      { "command": "writeFile", "args": { "path": "config.txt", "content": "port: 4000" } },
+      { "command": "add", "args": { "path": "config.txt" } },
+      { "command": "commit", "args": { "message": "Change port to 4000" } },
+      { "command": "checkout", "args": { "ref": "feature" } }
+    ],
+    "head": "feature"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "head-at", "params": { "ref": "feature" } },
+      { "type": "file-exists", "params": { "path": "feature.txt" } },
+      { "type": "staging-empty", "params": {} },
+      { "type": "file-content", "params": { "path": "config.txt", "notContains": "<<<<<<" } }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 8
+  },
+  "hints": [
+    { "trigger": "after-attempts", "triggerValue": 3, "text": "The server room monk mutters: 'Start with git rebase main. When it stops with a conflict, edit config.txt to pick the right port.'", "penalty": 0.25 },
+    { "trigger": "after-attempts", "triggerValue": 5, "text": "A note on the server reads: 'After resolving config.txt, run git add config.txt && git rebase --continue.'", "penalty": 0.5 }
+  ],
+  "rewards": {
+    "stars": { "maxCommands": { "two": 6, "three": 4 } },
+    "achievement": "rebase-survivor"
+  }
+}

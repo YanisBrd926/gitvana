@@ -1,0 +1,53 @@
+{
+  "id": "act4-19-reflog",
+  "act": 4,
+  "order": 19,
+  "title": "The Reflog Remembers",
+  "subtitle": "Nothing is ever truly lost in the monastery",
+  "difficulty": "intermediate",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "Brother Linus was working on a secret feature. He called the branch 'secret-feature.' He committed a treasure map to it. Then -- and this is the important part -- he deleted the branch.\n\n\"It's gone,\" he says, staring at the terminal. \"I deleted the branch before merging. The treasure map... it's lost forever.\"\n\nThe Head Monk chuckles from the corner. \"Lost? LOST? Nothing is ever lost in Git, young monk. The reflog remembers ALL.\"\n\nHe taps the side of his head. \"Git records every move HEAD makes. Every checkout, every commit, every branch switch. The commit is still there, floating in the void. You just need to find its hash in the reflog and give it a branch again.\"\n\nThe Head Monk's eyes gleam. \"Go. Bring back the treasure.\"",
+    "concept": "The reflog (reference log) records every position HEAD has been at. Even when you delete a branch, the commits still exist -- they just have no branch pointing to them. Use git reflog to find the lost commit's hash, then create a new branch at that hash.",
+    "objectives": [
+      "Use git reflog to find the lost commit",
+      "Create a new branch called 'recovered' at the lost commit's hash",
+      "Checkout the recovered branch to verify the treasure"
+    ],
+    "newCommands": ["git reflog", "git branch <name> <hash>"]
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "base.txt", "content": "base" } },
+      { "command": "add", "args": { "path": "base.txt" } },
+      { "command": "commit", "args": { "message": "Initial" } },
+      { "command": "branch", "args": { "name": "secret-feature" } },
+      { "command": "checkout", "args": { "ref": "secret-feature" } },
+      { "command": "writeFile", "args": { "path": "treasure.txt", "content": "You found it!" } },
+      { "command": "add", "args": { "path": "treasure.txt" } },
+      { "command": "commit", "args": { "message": "Add treasure" } },
+      { "command": "checkout", "args": { "ref": "main" } },
+      { "command": "deleteBranch", "args": { "name": "secret-feature" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "file-exists", "params": { "path": "treasure.txt" } },
+      { "type": "branch-exists", "params": { "name": "recovered" } }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 6
+  },
+  "hints": [
+    { "trigger": "after-attempts", "triggerValue": 3, "text": "The monastery archivist whispers: 'git reflog shows every place HEAD has been. Look for the entry that says \"Add treasure\" -- the hash next to it is what you need.'", "penalty": 0.25 },
+    { "trigger": "after-attempts", "triggerValue": 5, "text": "A dusty scroll reads: 'Find the hash in the reflog. Then create a branch at that hash and check it out.'", "penalty": 0.5 }
+  ],
+  "rewards": {
+    "stars": { "maxCommands": { "two": 5, "three": 3 } },
+    "achievement": "reflog-remembers"
+  }
+}

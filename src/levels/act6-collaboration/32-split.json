@@ -1,0 +1,64 @@
+{
+  "id": "act6-32-split",
+  "act": 6,
+  "order": 32,
+  "title": "Split Personality",
+  "subtitle": "Split one commit into 3 — but the order matters",
+  "difficulty": "expert",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "Code review is back, and it's brutal.\n\n\"One commit. THREE different changes. A bugfix in app.js, a feature in feature.js, and a refactor in utils.js. All crammed together like monks in a phone booth.\"\n\nThe Head Monk draws a dependency diagram. \"But here's the trap. The feature in feature.js IMPORTS from utils.js using the NEW name from the refactor. If you commit the feature BEFORE the refactor, the import path is wrong. The build breaks. The monastery falls.\"\n\nHe taps the diagram emphatically. \"The commit order must be: refactor FIRST (renames the function in utils.js), THEN the feature (which uses the new name), THEN the bugfix (independent, goes last). Three commits, correct order, or nothing.\"\n\nThe cat has already figured out the dependency graph. It's eating a fish and judging you.",
+    "concept": "Splitting commits requires understanding dependencies between changes:\n\n1. git reset --mixed HEAD~1 — undo the commit, keep files unstaged\n2. Determine the correct ORDER based on dependencies\n3. Stage and commit each change separately\n\nWhen one change depends on another (e.g., an import that references a renamed function), the dependency must be committed first. This is why atomic commits matter — they must be independently correct.",
+    "objectives": [
+      "Reset the mixed commit to unstage all 3 files",
+      "Commit utils.txt FIRST with a Refactor: message (it renames the function)",
+      "Commit feature.txt SECOND with a Feature: message (it depends on the refactored utils)",
+      "Commit app.txt THIRD with a Fix: message (independent bugfix)",
+      "All 3 files must exist with correct content"
+    ],
+    "newCommands": []
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "base.txt", "content": "base application code" } },
+      { "command": "add", "args": { "path": "base.txt" } },
+      { "command": "commit", "args": { "message": "Base" } },
+
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "application code\nbugfix: null check added\nstatus: patched" } },
+      { "command": "writeFile", "args": { "path": "utils.txt", "content": "utility module\nfunction: calculateTotal (renamed from calcTotal)\nexports: calculateTotal" } },
+      { "command": "writeFile", "args": { "path": "feature.txt", "content": "feature module\nimport: calculateTotal from utils\nuses: calculateTotal for pricing" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "add", "args": { "path": "utils.txt" } },
+      { "command": "add", "args": { "path": "feature.txt" } },
+      { "command": "commit", "args": { "message": "Mixed: bugfix, feature, and refactor all together" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "commit-count", "params": { "min": 4 } },
+      { "type": "commit-message-contains", "params": { "text": "Refactor:" } },
+      { "type": "commit-message-contains", "params": { "text": "Feature:" } },
+      { "type": "commit-message-contains", "params": { "text": "Fix:" } },
+      { "type": "file-exists", "params": { "path": "app.txt" } },
+      { "type": "file-exists", "params": { "path": "utils.txt" } },
+      { "type": "file-exists", "params": { "path": "feature.txt" } },
+      { "type": "file-content", "params": { "path": "utils.txt", "contains": "calculateTotal" } },
+      { "type": "file-content", "params": { "path": "feature.txt", "contains": "calculateTotal" } },
+      { "type": "staging-empty", "params": {} }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 10
+  },
+  "hints": [
+    { "trigger": "after-attempts", "triggerValue": 5, "text": "The dependency: feature.txt imports calculateTotal from utils.txt. So utils.txt (the refactor) must be committed BEFORE feature.txt.", "penalty": 0.25 },
+    { "trigger": "manual", "text": "git reset --mixed HEAD~1, then: git add utils.txt, git commit -m 'Refactor: rename calcTotal to calculateTotal', git add feature.txt, git commit -m 'Feature: add pricing module', git add app.txt, git commit -m 'Fix: add null check'.", "penalty": 1 }
+  ],
+  "rewards": {
+    "stars": { "maxCommands": { "two": 9, "three": 7 } },
+    "achievement": "commit-splitter"
+  }
+}

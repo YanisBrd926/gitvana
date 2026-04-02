@@ -1,0 +1,77 @@
+{
+  "id": "act4-24-boss",
+  "act": 4,
+  "order": 24,
+  "title": "The Cold Case",
+  "subtitle": "Bisect, blame, revert -- solve the monastery's oldest mystery",
+  "difficulty": "expert",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "The monastery's ancient codebase has a bug that nobody can find. It's been there for commits and commits, buried under layers of changes by multiple monks.\n\nThe Head Monk opens a dusty file labeled \"COLD CASE.\" \"Ten commits. Multiple authors. Somewhere in the middle, someone broke the sacred test. The test file should say PASS but it says FAIL.\"\n\nHe slides the case across the desk. \"Bisect to find WHEN it broke. Blame to find WHO did it. Revert to fix it. Standard detective procedure.\"\n\nThe monastery cat jumps on the desk and knocks the file to the floor. Papers scatter everywhere. The cat looks at you as if to say, \"Clock's ticking, detective.\"\n\nThis is the final investigation. Every tool in your detective kit. One cold case. Solve it.",
+    "concept": "Combining bisect, blame, and revert gives you a complete investigation toolkit. Bisect narrows down the commit range. Blame tells you who changed what. Revert undoes the damage cleanly. Together, they can solve any code mystery.",
+    "objectives": [
+      "Use bisect to find the commit that introduced the bug",
+      "Use blame to understand what changed",
+      "Revert the bad commit to fix the codebase",
+      "Verify the test passes again"
+    ],
+    "newCommands": []
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "test.txt", "content": "PASS" } },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "module v1" } },
+      { "command": "add", "args": { "path": "test.txt" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "Initial setup", "author": "Alice" } },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "module v2" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "Refactor module", "author": "Bob" } },
+      { "command": "writeFile", "args": { "path": "utils.txt", "content": "helper functions" } },
+      { "command": "add", "args": { "path": "utils.txt" } },
+      { "command": "commit", "args": { "message": "Add utilities", "author": "Alice" } },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "module v3" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "Update module", "author": "Charlie" } },
+      { "command": "writeFile", "args": { "path": "config.txt", "content": "settings" } },
+      { "command": "add", "args": { "path": "config.txt" } },
+      { "command": "commit", "args": { "message": "Add config", "author": "Dave" } },
+      { "command": "writeFile", "args": { "path": "test.txt", "content": "FAIL" } },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "module v4 with bug" } },
+      { "command": "add", "args": { "path": "test.txt" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "Optimize performance", "author": "Eve" } },
+      { "command": "writeFile", "args": { "path": "docs.txt", "content": "documentation" } },
+      { "command": "add", "args": { "path": "docs.txt" } },
+      { "command": "commit", "args": { "message": "Add documentation", "author": "Alice" } },
+      { "command": "writeFile", "args": { "path": "utils.txt", "content": "helper functions v2" } },
+      { "command": "add", "args": { "path": "utils.txt" } },
+      { "command": "commit", "args": { "message": "Improve utilities", "author": "Bob" } },
+      { "command": "writeFile", "args": { "path": "config.txt", "content": "settings v2" } },
+      { "command": "add", "args": { "path": "config.txt" } },
+      { "command": "commit", "args": { "message": "Update config", "author": "Charlie" } },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "module v5 with bug" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "Final polish", "author": "Dave" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "file-content", "params": { "path": "test.txt", "contains": "PASS" } },
+      { "type": "staging-empty", "params": {} }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 20
+  },
+  "hints": [
+    { "trigger": "after-attempts", "triggerValue": 8, "text": "The cold case file has a note: 'Standard detective procedure: narrow the range, identify the suspect, undo the damage. You have all the investigative tools you need.'", "penalty": 0.5 }
+  ],
+  "rewards": {
+    "stars": { "maxCommands": { "two": 15, "three": 10 } },
+    "achievement": "cold-case-solved"
+  }
+}

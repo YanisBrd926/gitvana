@@ -1,0 +1,67 @@
+{
+  "id": "act1-04-undo",
+  "act": 1,
+  "order": 4,
+  "title": "The Undo Ladder",
+  "subtitle": "Mistakes are just commits waiting to be undone",
+  "difficulty": "beginner",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "Brother Fumblefingers has done it again. He committed the monastery rules with the message \"WRONG\" instead of something meaningful. The Head Monk is not amused.\n\n\"The commit exists,\" the Head Monk says, pinching the bridge of his nose. \"The changes are fine. The MESSAGE is an embarrassment to this order. I need you to undo that commit — softly, mind you, we want to keep the changes staged — and recommit with a proper message.\"\n\nHe glares at Brother Fumblefingers, who is trying to hide behind a potted plant.",
+    "concept": "git reset --soft HEAD~1 undoes the last commit but keeps all changes staged. It's like saying 'I want a do-over on that commit, but I don't want to lose my work.' The changes stay in the staging area, ready to be committed again with a better message (or different files).",
+    "objectives": [
+      "Use 'git reset --soft HEAD~1' to undo the bad commit",
+      "Verify your changes are still staged (git status)",
+      "Recommit with the message 'Add monastery rules'"
+    ],
+    "newCommands": ["git reset --soft HEAD~1"]
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "rules.txt", "content": "Be kind" } },
+      { "command": "add", "args": { "path": "rules.txt" } },
+      { "command": "commit", "args": { "message": "Setup" } },
+      { "command": "writeFile", "args": { "path": "rules.txt", "content": "Be kind\nBe patient\nBe humble" } },
+      { "command": "add", "args": { "path": "rules.txt" } },
+      { "command": "commit", "args": { "message": "WRONG" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "commit-count", "params": { "min": 2 } },
+      { "type": "commit-message-contains", "params": { "message": "Add monastery rules" } },
+      { "type": "staging-empty", "params": {} }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 4
+  },
+  "hints": [
+    {
+      "trigger": "after-attempts",
+      "triggerValue": 2,
+      "text": "The Head Monk sighs: 'git reset --soft HEAD~1 will undo the last commit but keep your changes staged. Then just commit again with the right message.'",
+      "penalty": 0.25
+    },
+    {
+      "trigger": "after-attempts",
+      "triggerValue": 4,
+      "text": "Brother Fumblefingers mouths from behind the plant: 'Reset soft, then commit -m \"Add monastery rules\". Please. My reputation depends on it.'",
+      "penalty": 0.5
+    },
+    {
+      "trigger": "manual",
+      "text": "The monastery cat types with one paw: git reset --soft HEAD~1 && git commit -m \"Add monastery rules\"",
+      "penalty": 1
+    }
+  ],
+  "rewards": {
+    "stars": {
+      "maxCommands": { "two": 3, "three": 2 }
+    },
+    "achievement": "soft-reset-master"
+  }
+}

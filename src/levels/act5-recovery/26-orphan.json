@@ -1,0 +1,53 @@
+{
+  "id": "act5-26-orphan",
+  "act": 5,
+  "order": 26,
+  "title": "The Orphan Branch",
+  "subtitle": "Create a branch with no shared history",
+  "difficulty": "intermediate",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "The Head Monk has a vision.\n\n\"The monastery needs documentation. Not IN the app. Not NEXT to the app. A completely separate... dimension of documentation.\"\n\nHe stares into the distance like a pirate captain spotting land after months at sea. \"A branch that shares NOTHING with main. No common ancestor. No shared files. Like a ghost ship sailing alongside us but in a completely different ocean.\"\n\nThe cat looks confused. Honestly, same.\n\n\"Some branches serve a completely different purpose than the main code. GitHub Pages uses this pattern — a branch called 'docs' that contains only documentation, with zero connection to the source code history.\"\n\nHe pauses dramatically. \"Create me an orphan branch. A branch born from the void itself.\"",
+    "concept": "Sometimes you need a branch that has absolutely no relationship to your main codebase — like a GitHub Pages branch for documentation. You can achieve this by creating a branch, removing all tracked files, and starting fresh.\n\nThe key insight: not all branches need to share history. Some branches serve completely different purposes.",
+    "objectives": [
+      "Create a branch called 'docs'",
+      "Remove all application files from the docs branch",
+      "Create documentation files on the docs branch",
+      "Commit the documentation",
+      "The docs branch should have no app files"
+    ],
+    "newCommands": []
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "=== Monastery Application ===\nVersion: 3.0\nStatus: running\nModules: meditation, tea, garden" } },
+      { "command": "writeFile", "args": { "path": "config.txt", "content": "db_host: monastery-db.local\nport: 5432\nenv: production" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "add", "args": { "path": "config.txt" } },
+      { "command": "commit", "args": { "message": "Initial app" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "branch-exists", "params": { "name": "docs" } },
+      { "type": "file-exists", "params": { "path": "README.txt" } },
+      { "type": "commit-count", "params": { "min": 2 } },
+      { "type": "staging-empty", "params": {} }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 10
+  },
+  "hints": [
+    { "trigger": "after-attempts", "triggerValue": 3, "text": "A monk suggests: 'Create the docs branch with git branch docs, then git checkout docs. Remove the app files with git rm, then create your documentation.'", "penalty": 0.25 },
+    { "trigger": "after-attempts", "triggerValue": 5, "text": "The cat scribbles: 'git branch docs && git checkout docs, then git rm app.txt config.txt, then create README.txt with your docs, git add README.txt, git commit.'", "penalty": 0.5 },
+    { "trigger": "manual", "text": "The Ancient Scroll: git branch docs, git checkout docs, git rm app.txt, git rm config.txt, write README.txt with documentation, git add README.txt, git commit -m \"Add documentation\".", "penalty": 1 }
+  ],
+  "rewards": {
+    "stars": { "maxCommands": { "two": 8, "three": 6 } },
+    "achievement": "orphan-creator"
+  }
+}

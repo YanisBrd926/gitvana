@@ -1,0 +1,68 @@
+{
+  "id": "act2-11-stash",
+  "act": 2,
+  "order": 11,
+  "title": "Stash & Dash",
+  "subtitle": "Hide your work, fix the fire, come back",
+  "difficulty": "intermediate",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "You're in the middle of writing a new feature — app.txt has uncommitted changes, a work in progress. Suddenly, the monastery alarm bell rings.\n\n\"CRITICAL BUG IN PRODUCTION!\" shouts a monk running past with his robe on fire (metaphorically). \"Drop everything and fix it! But DON'T lose your feature work!\"\n\nThe Head Monk appears at your shoulder. \"Stash your uncommitted changes. Switch to a new branch, fix the bug, come back, and recover your work. A good monk never loses a single line of code.\"\n\nThe monastery cat has already stashed three mice under the meditation cushion. It understands the concept intuitively.",
+    "concept": "git stash temporarily saves your uncommitted changes and cleans your working directory. It's like putting your work-in-progress in a drawer. You can then switch branches, do other work, and later use git stash pop to restore your changes exactly where you left off.",
+    "objectives": [
+      "Stash your current uncommitted changes with 'git stash'",
+      "Create and switch to a new branch called 'bugfix'",
+      "Make a commit on the bugfix branch (fix something)",
+      "Switch back to main and restore your stashed changes with 'git stash pop'",
+      "Your WIP changes ('new feature WIP') should be back in app.txt"
+    ],
+    "newCommands": ["git stash", "git stash pop", "git stash list"]
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "version 1" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "v1" } },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "version 1\nnew feature WIP" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "branch-exists", "params": { "name": "bugfix" } },
+      { "type": "commit-count", "params": { "min": 2 } },
+      { "type": "file-content", "params": { "path": "app.txt", "contains": "new feature WIP" } },
+      { "type": "staging-empty", "params": {} }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 10
+  },
+  "hints": [
+    {
+      "trigger": "after-attempts",
+      "triggerValue": 3,
+      "text": "The Head Monk gestures calmly: 'git stash saves your uncommitted work. Then git checkout -b bugfix to create and switch to the fix branch.'",
+      "penalty": 0.25
+    },
+    {
+      "trigger": "after-attempts",
+      "triggerValue": 5,
+      "text": "A monk with soot on his face (the metaphorical fire got out of hand) shouts: 'On bugfix, make a file and commit. Then git checkout main && git stash pop to get your work back!'",
+      "penalty": 0.5
+    },
+    {
+      "trigger": "manual",
+      "text": "The monastery cat types between naps: git stash && git checkout -b bugfix && echo \"fixed\" > fix.txt && git add fix.txt && git commit -m \"Fix critical bug\" && git checkout main && git stash pop",
+      "penalty": 1
+    }
+  ],
+  "rewards": {
+    "stars": {
+      "maxCommands": { "two": 9, "three": 7 }
+    },
+    "achievement": "stash-master"
+  }
+}

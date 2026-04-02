@@ -1,0 +1,70 @@
+{
+  "id": "act3-18-boss",
+  "act": 3,
+  "order": 18,
+  "title": "The Historian's Dilemma",
+  "subtitle": "Cherry-pick, squash, rebase, purge -- all before dawn",
+  "difficulty": "expert",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "The monastery bell strikes midnight. You've been summoned to the Head Monk's office.\n\nHe slides a laptop across the desk. On screen: the messiest feature branch you've ever seen. Five commits, each worse than the last:\n\n1. A good feature commit\n2. A WIP commit that should be squashed into #1\n3. A commit containing a secret API key\n4. Another good feature commit\n5. A commit that was meant for the 'hotfix' branch entirely\n\nThe Head Monk folds his hands. \"Clean. This. Up. Cherry-pick commit 5 to the hotfix branch. Remove the secret. Squash the WIP. Rebase onto main. Merge it clean.\"\n\nHe pauses at the door. \"I'll know if you didn't do it properly. The monastery cat tells me everything.\"\n\nThis is the final exam. Every technique you've learned. One branch. One night.",
+    "concept": "Real-world branch cleanup often requires combining multiple techniques: cherry-pick to move misplaced commits, reset to remove bad commits, and rebase to update your branch. The key is working methodically -- one operation at a time.",
+    "objectives": [
+      "Cherry-pick the misplaced commit to the hotfix branch",
+      "Remove the secret from the feature branch history",
+      "Squash the WIP commit into the feature work",
+      "Rebase the cleaned feature onto main",
+      "Merge everything into main"
+    ],
+    "newCommands": []
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "monastery app v1" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "Initial app" } },
+      { "command": "branch", "args": { "name": "hotfix" } },
+      { "command": "branch", "args": { "name": "feature" } },
+      { "command": "checkout", "args": { "ref": "main" } },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "monastery app v1.1" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "Patch main" } },
+      { "command": "checkout", "args": { "ref": "feature" } },
+      { "command": "writeFile", "args": { "path": "feature.txt", "content": "new feature code" } },
+      { "command": "add", "args": { "path": "feature.txt" } },
+      { "command": "commit", "args": { "message": "Add new feature" } },
+      { "command": "writeFile", "args": { "path": "feature.txt", "content": "new feature code\nmore feature code" } },
+      { "command": "add", "args": { "path": "feature.txt" } },
+      { "command": "commit", "args": { "message": "WIP feature stuff" } },
+      { "command": "writeFile", "args": { "path": ".secret", "content": "DB_PASSWORD=monastery123" } },
+      { "command": "add", "args": { "path": ".secret" } },
+      { "command": "commit", "args": { "message": "Add db config" } },
+      { "command": "writeFile", "args": { "path": "feature.txt", "content": "new feature code\nmore feature code\nfinal feature" } },
+      { "command": "add", "args": { "path": "feature.txt" } },
+      { "command": "commit", "args": { "message": "Complete feature" } },
+      { "command": "writeFile", "args": { "path": "hotfix-patch.txt", "content": "critical fix for production" } },
+      { "command": "add", "args": { "path": "hotfix-patch.txt" } },
+      { "command": "commit", "args": { "message": "Fix critical production bug" } }
+    ],
+    "head": "feature"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "head-at", "params": { "ref": "main" } },
+      { "type": "staging-empty", "params": {} },
+      { "type": "commit-count", "params": { "min": 4 } }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 25
+  },
+  "hints": [
+    { "trigger": "after-attempts", "triggerValue": 8, "text": "The midnight cat purrs: 'Work methodically. Move what doesn't belong, remove what shouldn't exist, squash what should be together, then rebase and merge. One step at a time.'", "penalty": 0.5 }
+  ],
+  "rewards": {
+    "stars": { "maxCommands": { "two": 18, "three": 12 } },
+    "achievement": "historians-dilemma"
+  }
+}

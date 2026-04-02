@@ -1,0 +1,72 @@
+{
+  "id": "act6-31-wrong-branch",
+  "act": 6,
+  "order": 31,
+  "title": "The Wrong Branch",
+  "subtitle": "5 interleaved commits on main — sort them onto the right branches",
+  "difficulty": "advanced",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "Five commits on main. Every single one is a feature commit. None belong here.\n\nBut it gets worse: they're interleaved. Three commits belong on feature-ui (they modify UI files), and two belong on feature-api (they modify API files). They're NOT in a convenient order — UI, API, UI, UI, API.\n\nThe Head Monk looks at the git log like a disappointed parent reading a report card. \"You need to EXAMINE each commit. Read the log. Use git show if you must. Figure out which commits are UI work and which are API work.\"\n\n\"Then: create both feature branches, cherry-pick the right commits to each, and reset main back to where it belongs.\"\n\nThe cat has already sorted its yarn by color, texture, and philosophical significance. It finds your chaos offensive.",
+    "concept": "When commits are on the wrong branch, you need to:\n1. Examine each commit with git log or git show to understand what it does\n2. Create the correct branches\n3. Cherry-pick each commit to the right branch\n4. Reset the original branch to remove them\n\nThe key skill is INVESTIGATION — you must determine where each commit belongs before acting.",
+    "objectives": [
+      "Examine the commits on main to determine which are UI and which are API",
+      "Create feature-ui branch and cherry-pick the 3 UI commits to it",
+      "Create feature-api branch and cherry-pick the 2 API commits to it",
+      "Reset main back to only the base commit",
+      "All feature files must exist on their correct branches"
+    ],
+    "newCommands": []
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "base.txt", "content": "monastery application base" } },
+      { "command": "add", "args": { "path": "base.txt" } },
+      { "command": "commit", "args": { "message": "Base application" } },
+
+      { "command": "writeFile", "args": { "path": "header.txt", "content": "UI: header component\nlogo: monastery.png\nnav: home, about, contact" } },
+      { "command": "add", "args": { "path": "header.txt" } },
+      { "command": "commit", "args": { "message": "Add header component" } },
+
+      { "command": "writeFile", "args": { "path": "users-api.txt", "content": "API: /users endpoint\nGET: list all users\nPOST: create user" } },
+      { "command": "add", "args": { "path": "users-api.txt" } },
+      { "command": "commit", "args": { "message": "Add users API endpoint" } },
+
+      { "command": "writeFile", "args": { "path": "sidebar.txt", "content": "UI: sidebar navigation\nlinks: dashboard, settings\ncollapsible: true" } },
+      { "command": "add", "args": { "path": "sidebar.txt" } },
+      { "command": "commit", "args": { "message": "Add sidebar navigation" } },
+
+      { "command": "writeFile", "args": { "path": "footer.txt", "content": "UI: footer component\ncopyright: monastery 2026\nlinks: privacy, terms" } },
+      { "command": "add", "args": { "path": "footer.txt" } },
+      { "command": "commit", "args": { "message": "Add footer component" } },
+
+      { "command": "writeFile", "args": { "path": "posts-api.txt", "content": "API: /posts endpoint\nGET: list posts\nPOST: create post\nDELETE: remove post" } },
+      { "command": "add", "args": { "path": "posts-api.txt" } },
+      { "command": "commit", "args": { "message": "Add posts API endpoint" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "branch-exists", "params": { "name": "feature-ui" } },
+      { "type": "branch-exists", "params": { "name": "feature-api" } },
+      { "type": "head-at", "params": { "ref": "main" } },
+      { "type": "file-content", "params": { "path": "base.txt", "contains": "base" } },
+      { "type": "commit-count", "params": { "min": 1 } },
+      { "type": "staging-empty", "params": {} }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 18
+  },
+  "hints": [
+    { "trigger": "after-attempts", "triggerValue": 5, "text": "Use git log --oneline to see all commits. The header, sidebar, and footer are UI. The users-api and posts-api are API work. Cherry-pick by referencing HEAD~N.", "penalty": 0.25 },
+    { "trigger": "manual", "text": "1) git log --oneline to identify commits. 2) git branch feature-ui, git branch feature-api. 3) git checkout feature-ui, cherry-pick the 3 UI commits. 4) git checkout feature-api, cherry-pick the 2 API commits. 5) git checkout main, git reset --hard HEAD~5.", "penalty": 1 }
+  ],
+  "rewards": {
+    "stars": { "maxCommands": { "two": 16, "three": 12 } },
+    "achievement": "branch-surgeon"
+  }
+}

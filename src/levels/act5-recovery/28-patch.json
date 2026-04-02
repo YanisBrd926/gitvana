@@ -1,0 +1,86 @@
+{
+  "id": "act5-28-patch",
+  "act": 5,
+  "order": 28,
+  "title": "The Patch Master",
+  "subtitle": "Examine commits, cherry-pick the good ones, skip the junk",
+  "difficulty": "advanced",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "Two feature branches arrive for code review. Each has 4 commits. But the authors were... undisciplined.\n\nBranch 'feature-search' has 4 commits: a working search implementation, a WIP experiment, a search optimization, and another experiment that broke things. Branch 'feature-export' has 4 commits: an export module, a debugging hack, a CSV formatter, and more debugging cruft.\n\nThe Head Monk slides a release checklist across the table. \"We need a release branch with ONLY the good commits. Two from search, two from export. The experiments and debugging hacks stay behind.\"\n\nHe pauses. \"But I'm not telling you WHICH commits are good. You'll need to examine each one with git log and git show. Read the commit messages. Look at the changes. Make your own judgment.\"\n\nThe cat has already reviewed both branches and is judging you silently.",
+    "concept": "In real codebases, you often need to selectively pick commits from branches that contain a mix of good work and throwaway experiments. Use git log to see commit messages, git show to inspect changes, then cherry-pick only what belongs in your release.\n\ngit log <branch> — see what commits exist\ngit show <ref> — inspect a specific commit\ngit cherry-pick <ref> — apply a commit to current branch",
+    "objectives": [
+      "Examine both feature branches to identify the good commits",
+      "Create a 'release' branch from main",
+      "Cherry-pick ONLY the good commits: the working implementations and improvements, not the WIP/debug ones",
+      "The release branch should have search.txt and export.txt with the correct final content"
+    ],
+    "newCommands": []
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "main application\nversion: 1.0" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "Initial app" } },
+
+      { "command": "branch", "args": { "name": "feature-search" } },
+      { "command": "checkout", "args": { "ref": "feature-search" } },
+      { "command": "writeFile", "args": { "path": "search.txt", "content": "search module\nindex: built\nquery: parsed" } },
+      { "command": "add", "args": { "path": "search.txt" } },
+      { "command": "commit", "args": { "message": "Implement search module" } },
+      { "command": "writeFile", "args": { "path": "experiment1.txt", "content": "WIP trying elasticsearch\nthis does not work yet" } },
+      { "command": "add", "args": { "path": "experiment1.txt" } },
+      { "command": "commit", "args": { "message": "WIP: experimenting with elasticsearch" } },
+      { "command": "writeFile", "args": { "path": "search.txt", "content": "search module\nindex: built\nquery: parsed\ncache: enabled\nresults: paginated" } },
+      { "command": "add", "args": { "path": "search.txt" } },
+      { "command": "commit", "args": { "message": "Optimize search with caching and pagination" } },
+      { "command": "writeFile", "args": { "path": "experiment2.txt", "content": "WIP trying solr\nalso broken" } },
+      { "command": "add", "args": { "path": "experiment2.txt" } },
+      { "command": "commit", "args": { "message": "WIP: solr experiment (broken)" } },
+
+      { "command": "checkout", "args": { "ref": "main" } },
+      { "command": "branch", "args": { "name": "feature-export" } },
+      { "command": "checkout", "args": { "ref": "feature-export" } },
+      { "command": "writeFile", "args": { "path": "export.txt", "content": "export module\nformat: json\nstreaming: enabled" } },
+      { "command": "add", "args": { "path": "export.txt" } },
+      { "command": "commit", "args": { "message": "Implement export module" } },
+      { "command": "writeFile", "args": { "path": "debug.txt", "content": "console.log everywhere\ndebugging hack\nremove before merge" } },
+      { "command": "add", "args": { "path": "debug.txt" } },
+      { "command": "commit", "args": { "message": "DEBUG: add logging everywhere (REMOVE BEFORE MERGE)" } },
+      { "command": "writeFile", "args": { "path": "export.txt", "content": "export module\nformat: json, csv\nstreaming: enabled\nbatch: supported" } },
+      { "command": "add", "args": { "path": "export.txt" } },
+      { "command": "commit", "args": { "message": "Add CSV format and batch export" } },
+      { "command": "writeFile", "args": { "path": "debug2.txt", "content": "more debug cruft\ntmp file" } },
+      { "command": "add", "args": { "path": "debug2.txt" } },
+      { "command": "commit", "args": { "message": "DEBUG: more temporary logging" } },
+
+      { "command": "checkout", "args": { "ref": "main" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "branch-exists", "params": { "name": "release" } },
+      { "type": "head-at", "params": { "ref": "release" } },
+      { "type": "file-exists", "params": { "path": "search.txt" } },
+      { "type": "file-exists", "params": { "path": "export.txt" } },
+      { "type": "file-content", "params": { "path": "search.txt", "contains": "paginated" } },
+      { "type": "file-content", "params": { "path": "export.txt", "contains": "csv" } },
+      { "type": "commit-count", "params": { "min": 5 } },
+      { "type": "staging-empty", "params": {} }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 16
+  },
+  "hints": [
+    { "trigger": "after-attempts", "triggerValue": 5, "text": "Use git log feature-search and git log feature-export to see commit messages. The WIP and DEBUG commits are the bad ones.", "penalty": 0.25 },
+    { "trigger": "manual", "text": "Create a release branch. Cherry-pick the 'Implement search' and 'Optimize search' commits from feature-search. Cherry-pick the 'Implement export' and 'Add CSV' commits from feature-export. Skip all WIP and DEBUG commits.", "penalty": 1 }
+  ],
+  "rewards": {
+    "stars": { "maxCommands": { "two": 14, "three": 10 } },
+    "achievement": "patch-master"
+  }
+}

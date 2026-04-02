@@ -1,0 +1,60 @@
+{
+  "id": "act4-23-diff-detective",
+  "act": 4,
+  "order": 23,
+  "title": "Diff Detective",
+  "subtitle": "Compare branches, combine the truth",
+  "difficulty": "intermediate",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "The monastery's quarterly report is a mess. Three branches, three different versions of the truth.\n\nMain has the original report: Q1: 100, Q2: 200, Q3: 300, Q4: 400.\n\nBranch 'update-a' updated Q1 to 150. Branch 'update-b' updated Q2 to 250 and Q3 to 350. Both branches are correct -- they just updated different quarters.\n\nThe Head Monk needs the FINAL report on main with ALL the correct numbers combined. \"Use diff,\" he says. \"Compare the branches. Understand what changed. Then create the definitive version.\"\n\nYou are the Diff Detective. Examine the evidence across branches, deduce the correct combined state, and commit the truth.",
+    "concept": "git diff can compare branches: 'git diff main..update-a' shows what changed. By examining diffs between branches, you can understand what each branch modified and manually combine the changes into the correct final state.",
+    "objectives": [
+      "Use git diff to examine changes on update-a and update-b",
+      "Create the correct combined report on main",
+      "Commit the final version"
+    ],
+    "newCommands": ["git diff <branch1>..<branch2>"]
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "report.txt", "content": "Q1: 100\nQ2: 200\nQ3: 300\nQ4: 400" } },
+      { "command": "add", "args": { "path": "report.txt" } },
+      { "command": "commit", "args": { "message": "Initial report" } },
+      { "command": "branch", "args": { "name": "update-a" } },
+      { "command": "branch", "args": { "name": "update-b" } },
+      { "command": "checkout", "args": { "ref": "update-a" } },
+      { "command": "writeFile", "args": { "path": "report.txt", "content": "Q1: 150\nQ2: 200\nQ3: 300\nQ4: 400" } },
+      { "command": "add", "args": { "path": "report.txt" } },
+      { "command": "commit", "args": { "message": "Update Q1" } },
+      { "command": "checkout", "args": { "ref": "update-b" } },
+      { "command": "writeFile", "args": { "path": "report.txt", "content": "Q1: 100\nQ2: 250\nQ3: 350\nQ4: 400" } },
+      { "command": "add", "args": { "path": "report.txt" } },
+      { "command": "commit", "args": { "message": "Update Q2 Q3" } },
+      { "command": "checkout", "args": { "ref": "main" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "file-content", "params": { "path": "report.txt", "contains": "Q1: 150" } },
+      { "type": "file-content", "params": { "path": "report.txt", "contains": "Q2: 250" } },
+      { "type": "file-content", "params": { "path": "report.txt", "contains": "Q3: 350" } },
+      { "type": "commit-count", "params": { "min": 2 } },
+      { "type": "staging-empty", "params": {} }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 10
+  },
+  "hints": [
+    { "trigger": "after-attempts", "triggerValue": 3, "text": "The report auditor suggests: 'Try git diff main..update-a and git diff main..update-b to see what each branch changed.'", "penalty": 0.25 },
+    { "trigger": "after-attempts", "triggerValue": 5, "text": "A sticky note on the report reads: 'Each branch updated different quarters. Combine the correct values from both branches into one definitive report.'", "penalty": 0.5 }
+  ],
+  "rewards": {
+    "stars": { "maxCommands": { "two": 8, "three": 5 } },
+    "achievement": "diff-detective"
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "id": "act6-35-gitvana",
+  "act": 6,
+  "order": 35,
+  "title": "Gitvana",
+  "subtitle": "THE FINAL EXAM — Recover, clean, cherry-pick, merge, tag",
+  "difficulty": "expert",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "The Hall of Ancestors is silent. Every monk in the monastery has gathered. The cat sits on the highest shelf, wearing a crown made of ethernet cables.\n\nThe Head Monk steps forward. His voice echoes through the chamber.\n\n\"You have walked the path of init. You have weathered merge conflicts that would break lesser souls. You have traveled through time, recovered the lost, and split the unsplittable.\"\n\nHe gestures to a massive screen showing a repository in ABSOLUTE CRISIS:\n\n- A dev branch with 3 critical commits (network, monitoring, backup) was DELETED. Those commits exist only in the reflog now.\n- The feature-enlightenment branch has 7 commits: 3 good (enlightenment module, wisdom DB, zen mode), 2 WIP, 1 leaked secret, and 1 hotfix that belongs on the hotfix branch.\n- The hotfix branch exists but has nothing on it yet.\n- Main needs ALL the good work: recovered dev commits, cleaned feature, and the hotfix.\n\nFive cascading problems. Each depends on solving the previous one.\n\n\"Recover the lost commits. Clean the feature branch. Move the hotfix. Merge everything. Tag v3.0.\"\n\nThe cat purrs. It already believes in you.\n\n\"Do all of this... and you will have achieved GITVANA.\"\n\nHe sits in lotus position. \"Total mastery of version control. The end of suffering. Or at least, the end of Git suffering.\"",
+    "concept": "This final challenge combines every skill you've learned:\n\n- Reflog: recover lost commits from deleted branches\n- Reset + cherry-pick: clean up messy branches, remove secrets\n- Cherry-pick: move commits between branches\n- Merge: bring branches together\n- Tag: mark the final release\n\nThe key is to triage: assess all damage first, plan your approach, then execute one step at a time. Every step depends on the previous one being correct. There is no shortcut.",
+    "objectives": [
+      "Recover the 3 lost dev commits from reflog (network, monitoring, backup)",
+      "Clean the feature branch: keep only the 3 good enlightenment commits",
+      "Move the hotfix commit from feature to the hotfix branch",
+      "Merge recovery, hotfix, and cleaned feature branches into main",
+      "Tag the final result as v3.0",
+      "No secrets or WIP files in the final result"
+    ],
+    "newCommands": []
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "MonasteryOS v0.1\nCore: initialized" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "Initial commit" } },
+
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "MonasteryOS v0.2\nCore: initialized\nMeditation: loaded" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "Add meditation module" } },
+
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "MonasteryOS v1.0\nCore: initialized\nMeditation: loaded\nTea: brewing" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "v1.0 release" } },
+
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "MonasteryOS v2.0\nCore: initialized\nMeditation: loaded\nTea: brewing\nGarden: planted\nScheduler: active\nSecurity: hardened" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "v2.0 release" } },
+
+      { "command": "branch", "args": { "name": "feature-enlightenment" } },
+      { "command": "branch", "args": { "name": "hotfix" } },
+
+      { "command": "branch", "args": { "name": "dev" } },
+      { "command": "checkout", "args": { "ref": "dev" } },
+
+      { "command": "writeFile", "args": { "path": "network.txt", "content": "Network module\nProtocol: monastery-net\nStatus: connected" } },
+      { "command": "add", "args": { "path": "network.txt" } },
+      { "command": "commit", "args": { "message": "Add network module" } },
+
+      { "command": "writeFile", "args": { "path": "monitor.txt", "content": "Monitoring system\nMetrics: cpu, memory, disk\nAlerts: enabled" } },
+      { "command": "add", "args": { "path": "monitor.txt" } },
+      { "command": "commit", "args": { "message": "Add monitoring system" } },
+
+      { "command": "writeFile", "args": { "path": "backup.txt", "content": "Backup module\nSchedule: daily\nRetention: 30 days" } },
+      { "command": "add", "args": { "path": "backup.txt" } },
+      { "command": "commit", "args": { "message": "Add backup system" } },
+
+      { "command": "checkout", "args": { "ref": "feature-enlightenment" } },
+
+      { "command": "writeFile", "args": { "path": "enlightenment.txt", "content": "Enlightenment Module v1.0\nKoan generator: active" } },
+      { "command": "add", "args": { "path": "enlightenment.txt" } },
+      { "command": "commit", "args": { "message": "Add enlightenment module" } },
+
+      { "command": "writeFile", "args": { "path": "enlightenment.txt", "content": "Enlightenment Module v1.0\nKoan generator: active\nWisdom database: connected" } },
+      { "command": "add", "args": { "path": "enlightenment.txt" } },
+      { "command": "commit", "args": { "message": "Connect wisdom database" } },
+
+      { "command": "writeFile", "args": { "path": "wip1.txt", "content": "WIP: half-finished meditation tracker\nTODO: everything" } },
+      { "command": "add", "args": { "path": "wip1.txt" } },
+      { "command": "commit", "args": { "message": "WIP meditation tracker" } },
+
+      { "command": "writeFile", "args": { "path": "enlightenment.txt", "content": "Enlightenment Module v1.0\nKoan generator: active\nWisdom database: connected\nZen mode: enabled" } },
+      { "command": "add", "args": { "path": "enlightenment.txt" } },
+      { "command": "commit", "args": { "message": "Add zen mode" } },
+
+      { "command": "writeFile", "args": { "path": "wip2.txt", "content": "WIP: unfinished logging\nTODO: clean up" } },
+      { "command": "add", "args": { "path": "wip2.txt" } },
+      { "command": "commit", "args": { "message": "WIP more unfinished work" } },
+
+      { "command": "writeFile", "args": { "path": "secrets.txt", "content": "API_KEY=sk_live_LEAKED_monastery_12345\nDB_PASSWORD=SuperSecret_Never_Commit" } },
+      { "command": "add", "args": { "path": "secrets.txt" } },
+      { "command": "commit", "args": { "message": "Add config (CONTAINS SECRETS)" } },
+
+      { "command": "writeFile", "args": { "path": "timer-fix.txt", "content": "HOTFIX: meditation timer overflow\nFix: prevent infinite loop in zen mode\nPriority: URGENT" } },
+      { "command": "add", "args": { "path": "timer-fix.txt" } },
+      { "command": "commit", "args": { "message": "Fix meditation timer overflow" } },
+
+      { "command": "checkout", "args": { "ref": "main" } },
+      { "command": "deleteBranch", "args": { "name": "dev" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "tag-exists", "params": { "name": "v3.0" } },
+      { "type": "head-at", "params": { "ref": "main" } },
+      { "type": "file-exists", "params": { "path": "enlightenment.txt" } },
+      { "type": "file-exists", "params": { "path": "timer-fix.txt" } },
+      { "type": "file-exists", "params": { "path": "network.txt" } },
+      { "type": "file-exists", "params": { "path": "monitor.txt" } },
+      { "type": "file-exists", "params": { "path": "backup.txt" } },
+      { "type": "file-content", "params": { "path": "enlightenment.txt", "contains": "Zen mode" } },
+      { "type": "file-content", "params": { "path": "timer-fix.txt", "contains": "meditation timer" } },
+      { "type": "file-content", "params": { "path": "app.txt", "contains": "v2.0" } },
+      { "type": "staging-empty", "params": {} },
+      { "type": "commit-count", "params": { "min": 15 } }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 45
+  },
+  "hints": [],
+  "rewards": {
+    "stars": { "maxCommands": { "two": 35, "three": 25 } },
+    "achievement": "gitvana-achieved"
+  }
+}

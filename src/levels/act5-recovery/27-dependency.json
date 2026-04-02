@@ -1,0 +1,87 @@
+{
+  "id": "act5-27-dependency",
+  "act": 5,
+  "order": 27,
+  "title": "The Dependency Dance",
+  "subtitle": "Three dependent branches, rebasing chain, merge order matters",
+  "difficulty": "expert",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "The monastery's sprint review is tomorrow and three teams are in a chain of dependency.\n\nTeam Auth built the login system. Team API built endpoints ON TOP of auth. Team Frontend built the UI ON TOP of the API. Meanwhile, main moved forward with infrastructure commits that conflict with auth's work on readme.txt.\n\nThe Head Monk draws the dependency graph on the whiteboard. It looks like a family tree designed by an M.C. Escher fan.\n\n\"Three branches. Rebase them in the right order, merge them in the right order. If you rebase api before auth, you get a tangled mess. If you merge in the wrong order, you get conflicts that shouldn't exist.\"\n\nThe cat studies the whiteboard and wisely decides to nap instead.\n\n\"The dependency dance has ONE correct order. Figure it out.\"",
+    "concept": "When feature branches form a dependency chain (A depends on B depends on C), you must rebase and merge in the correct order:\n\n1. Rebase the base of the chain onto main\n2. Rebase each dependent branch onto its updated dependency\n3. Merge into main in dependency order\n\nGetting the order wrong creates unnecessary conflicts and a tangled history.",
+    "objectives": [
+      "Rebase auth onto main (resolve the conflict in readme.txt)",
+      "Rebase api onto the rebased auth",
+      "Rebase frontend onto the rebased api",
+      "Merge all three branches into main in the correct order"
+    ],
+    "newCommands": []
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "readme.txt", "content": "Monastery App v1" } },
+      { "command": "add", "args": { "path": "readme.txt" } },
+      { "command": "commit", "args": { "message": "Initial base" } },
+
+      { "command": "branch", "args": { "name": "auth" } },
+      { "command": "checkout", "args": { "ref": "auth" } },
+      { "command": "writeFile", "args": { "path": "readme.txt", "content": "Monastery App v1\nAuth: enabled" } },
+      { "command": "add", "args": { "path": "readme.txt" } },
+      { "command": "writeFile", "args": { "path": "auth.txt", "content": "auth module\nlogin: enabled\nlogout: enabled\nsession: active\ntokens: jwt" } },
+      { "command": "add", "args": { "path": "auth.txt" } },
+      { "command": "commit", "args": { "message": "Add auth module with JWT" } },
+
+      { "command": "branch", "args": { "name": "api" } },
+      { "command": "checkout", "args": { "ref": "api" } },
+      { "command": "writeFile", "args": { "path": "api.txt", "content": "api module\nendpoints: users, posts, comments\nauth: required\nrate-limit: enabled\ncaching: redis" } },
+      { "command": "add", "args": { "path": "api.txt" } },
+      { "command": "commit", "args": { "message": "Add API with caching" } },
+
+      { "command": "branch", "args": { "name": "frontend" } },
+      { "command": "checkout", "args": { "ref": "frontend" } },
+      { "command": "writeFile", "args": { "path": "frontend.txt", "content": "frontend module\nframework: react\napi-client: connected\nrouter: installed\nstate: redux" } },
+      { "command": "add", "args": { "path": "frontend.txt" } },
+      { "command": "commit", "args": { "message": "Add frontend with state management" } },
+
+      { "command": "checkout", "args": { "ref": "main" } },
+      { "command": "writeFile", "args": { "path": "readme.txt", "content": "Monastery App v2\nUpgraded!" } },
+      { "command": "add", "args": { "path": "readme.txt" } },
+      { "command": "commit", "args": { "message": "Upgrade to v2" } },
+      { "command": "writeFile", "args": { "path": "infra.txt", "content": "infrastructure\ndocker: configured\nci: github-actions" } },
+      { "command": "add", "args": { "path": "infra.txt" } },
+      { "command": "commit", "args": { "message": "Add infrastructure config" } },
+
+      { "command": "checkout", "args": { "ref": "auth" } }
+    ],
+    "head": "auth"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "head-at", "params": { "ref": "main" } },
+      { "type": "file-exists", "params": { "path": "auth.txt" } },
+      { "type": "file-exists", "params": { "path": "api.txt" } },
+      { "type": "file-exists", "params": { "path": "frontend.txt" } },
+      { "type": "file-exists", "params": { "path": "infra.txt" } },
+      { "type": "file-content", "params": { "path": "readme.txt", "contains": "v2" } },
+      { "type": "file-content", "params": { "path": "readme.txt", "contains": "Auth: enabled" } },
+      { "type": "file-content", "params": { "path": "auth.txt", "contains": "jwt" } },
+      { "type": "file-content", "params": { "path": "api.txt", "contains": "redis" } },
+      { "type": "file-content", "params": { "path": "frontend.txt", "contains": "redux" } },
+      { "type": "commit-count", "params": { "min": 6 } },
+      { "type": "staging-empty", "params": {} }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 20
+  },
+  "hints": [
+    { "trigger": "after-attempts", "triggerValue": 6, "text": "Think about the chain: auth depends on main, api depends on auth, frontend depends on api. Rebase in that order.", "penalty": 0.25 },
+    { "trigger": "manual", "text": "Order: rebase auth onto main (resolve readme.txt conflict), then checkout api and rebase onto auth, then checkout frontend and rebase onto api, then checkout main and merge auth, api, frontend in order.", "penalty": 1 }
+  ],
+  "rewards": {
+    "stars": { "maxCommands": { "two": 18, "three": 14 } },
+    "achievement": "dependency-dancer"
+  }
+}

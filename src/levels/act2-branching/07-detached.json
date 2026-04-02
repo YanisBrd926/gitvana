@@ -1,0 +1,77 @@
+{
+  "id": "act2-07-detached",
+  "act": 2,
+  "order": 7,
+  "title": "Detached HEAD Surgery",
+  "subtitle": "Lost in time, but not for long",
+  "difficulty": "intermediate",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "You wake up in the monastery infirmary. The nurse monk — who insists on being called 'Doctor' despite having no medical training whatsoever — is hovering over you.\n\n\"Bad news,\" she says. \"You've been checked out to an old commit. Your HEAD is detached. Don't panic — it's a git thing, not a medical thing.\"\n\nShe consults her clipboard. \"You're three commits behind the present. Any work you do here will be lost unless you create a branch to save it. Think of it as building a lifeboat in the middle of a time paradox.\"\n\nThe monastery cat is somehow in both the past and the present. Cats are weird like that.",
+    "concept": "When you checkout a specific commit (not a branch), you enter 'detached HEAD' state. You can look around and even make commits, but those commits aren't on any branch — they'll be lost when you switch away. To save your work, create a new branch with git checkout -b <name>, which anchors your commits to a branch name.",
+    "objectives": [
+      "You're in detached HEAD state — make a new commit here",
+      "Create a branch called 'rescue' to save your work",
+      "Ensure HEAD is on the 'rescue' branch"
+    ],
+    "newCommands": ["git checkout <commit-hash>", "git checkout -b <name>"]
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "a.txt", "content": "v1" } },
+      { "command": "add", "args": { "path": "a.txt" } },
+      { "command": "commit", "args": { "message": "v1" } },
+      { "command": "writeFile", "args": { "path": "a.txt", "content": "v2" } },
+      { "command": "add", "args": { "path": "a.txt" } },
+      { "command": "commit", "args": { "message": "v2" } },
+      { "command": "writeFile", "args": { "path": "a.txt", "content": "v3" } },
+      { "command": "add", "args": { "path": "a.txt" } },
+      { "command": "commit", "args": { "message": "v3" } },
+      { "command": "writeFile", "args": { "path": "a.txt", "content": "v4" } },
+      { "command": "add", "args": { "path": "a.txt" } },
+      { "command": "commit", "args": { "message": "v4" } },
+      { "command": "writeFile", "args": { "path": "a.txt", "content": "v5" } },
+      { "command": "add", "args": { "path": "a.txt" } },
+      { "command": "commit", "args": { "message": "v5" } },
+      { "command": "checkout", "args": { "ref": "HEAD~3" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "branch-exists", "params": { "name": "rescue" } },
+      { "type": "head-at", "params": { "branch": "rescue" } },
+      { "type": "commit-count", "params": { "min": 3 } }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 8
+  },
+  "hints": [
+    {
+      "trigger": "after-attempts",
+      "triggerValue": 3,
+      "text": "Doctor Monk checks her notes: 'You're in detached HEAD state. Make a commit — any commit. Then create a branch with git checkout -b rescue to anchor yourself.'",
+      "penalty": 0.25
+    },
+    {
+      "trigger": "after-attempts",
+      "triggerValue": 5,
+      "text": "A passing monk leaves a prescription: 'Create a file, add it, commit it, then git checkout -b rescue. The branch saves your commit from being garbage collected.'",
+      "penalty": 0.5
+    },
+    {
+      "trigger": "manual",
+      "text": "The monastery cat scribbles on the prescription pad: echo \"rescued\" > rescued.txt && git add rescued.txt && git commit -m \"Emergency commit\" && git checkout -b rescue",
+      "penalty": 1
+    }
+  ],
+  "rewards": {
+    "stars": {
+      "maxCommands": { "two": 6, "three": 4 }
+    },
+    "achievement": "head-reattacher"
+  }
+}

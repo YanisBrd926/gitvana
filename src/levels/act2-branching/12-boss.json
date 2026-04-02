@@ -1,0 +1,79 @@
+{
+  "id": "act2-12-boss",
+  "act": 2,
+  "order": 12,
+  "title": "The Triage",
+  "subtitle": "The Head Monk's gauntlet",
+  "difficulty": "advanced",
+  "mode": "strict",
+  "briefing": {
+    "narrative": "The Head Monk sits cross-legged in the Grand Repository, surrounded by scrolls and three branching diagrams drawn in ink.\n\n\"Three feature branches,\" he says. \"Each a mix of brilliance and catastrophe. The 'auth' branch has a good login system but also a commit that drops the database. The 'ui' branch has beautiful CSS but also a commit that replaces all text with wingdings. The 'api' branch... well, it's actually fine, just merge it.\"\n\nHe unfurls a final scroll. \"Cherry-pick the good, revert the bad, stash if you must, and when the dust settles — tag the result as v3.0. This is your trial. The cat will judge your work.\"\n\nThe monastery cat puts on reading glasses. It is ready to judge.",
+    "concept": "Real-world git work requires combining multiple skills: cherry-picking specific commits, reverting bad ones, managing stashes, and tagging releases. This level tests your ability to triage a messy repository and produce a clean, tagged release.",
+    "objectives": [
+      "Merge the 'api' branch into main",
+      "Cherry-pick the good commit from 'auth' (the login system, NOT the database drop)",
+      "Cherry-pick the good commit from 'ui' (the CSS, NOT the wingdings)",
+      "Tag the final result as 'v3.0' (annotated tag with a message)"
+    ],
+    "newCommands": []
+  },
+  "initialState": {
+    "strategy": "replay",
+    "replayScript": [
+      { "command": "init", "args": {} },
+      { "command": "writeFile", "args": { "path": "app.txt", "content": "Monastery App v2.9" } },
+      { "command": "add", "args": { "path": "app.txt" } },
+      { "command": "commit", "args": { "message": "Base app v2.9" } },
+      { "command": "branch", "args": { "name": "auth" } },
+      { "command": "branch", "args": { "name": "ui" } },
+      { "command": "branch", "args": { "name": "api" } },
+      { "command": "checkout", "args": { "ref": "auth" } },
+      { "command": "writeFile", "args": { "path": "login.txt", "content": "secure login system" } },
+      { "command": "add", "args": { "path": "login.txt" } },
+      { "command": "commit", "args": { "message": "Add login system" } },
+      { "command": "writeFile", "args": { "path": "db.txt", "content": "DROP TABLE everything;" } },
+      { "command": "add", "args": { "path": "db.txt" } },
+      { "command": "commit", "args": { "message": "Oops: drop database" } },
+      { "command": "checkout", "args": { "ref": "ui" } },
+      { "command": "writeFile", "args": { "path": "style.css", "content": "body { font-family: sans-serif; color: #333; }" } },
+      { "command": "add", "args": { "path": "style.css" } },
+      { "command": "commit", "args": { "message": "Add beautiful CSS" } },
+      { "command": "writeFile", "args": { "path": "fonts.txt", "content": "WINGDINGS EVERYWHERE" } },
+      { "command": "add", "args": { "path": "fonts.txt" } },
+      { "command": "commit", "args": { "message": "Oops: wingdings font" } },
+      { "command": "checkout", "args": { "ref": "api" } },
+      { "command": "writeFile", "args": { "path": "api.txt", "content": "GET /monks - list all monks\nPOST /meditation - start session\nDELETE /attachments - achieve enlightenment" } },
+      { "command": "add", "args": { "path": "api.txt" } },
+      { "command": "commit", "args": { "message": "Add REST API" } },
+      { "command": "checkout", "args": { "ref": "main" } }
+    ],
+    "head": "main"
+  },
+  "targetState": {
+    "validators": [
+      { "type": "tag-exists", "params": { "name": "v3.0" } },
+      { "type": "file-exists", "params": { "path": "api.txt" } },
+      { "type": "file-exists", "params": { "path": "login.txt" } },
+      { "type": "file-exists", "params": { "path": "style.css" } },
+      { "type": "file-content", "params": { "path": "app.txt", "contains": "Monastery App" } },
+      { "type": "staging-empty", "params": {} }
+    ]
+  },
+  "constraints": {
+    "maxCommands": 20
+  },
+  "hints": [
+    {
+      "trigger": "after-attempts",
+      "triggerValue": 8,
+      "text": "The Head Monk offers a clue: 'Not all commits on a branch are worth taking. Examine each branch with git log. Cherry-pick only the good. Tag when you are done.'",
+      "penalty": 0.5
+    }
+  ],
+  "rewards": {
+    "stars": {
+      "maxCommands": { "two": 16, "three": 10 }
+    },
+    "achievement": "act2-complete"
+  }
+}
