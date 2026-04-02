@@ -500,6 +500,11 @@ export class ShellBridge {
           if (result.output) {
             this.writeLine(result.output);
           }
+          // File-modifying builtins should trigger UI refresh
+          const fileModifiers = ['touch', 'echo', 'mkdir', 'rm'];
+          if (fileModifiers.includes(parsed.command)) {
+            eventBus.emit('state:changed', undefined as never);
+          }
         }
         break;
       }
