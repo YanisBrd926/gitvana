@@ -87,13 +87,17 @@ async function catCommand(args: string[], fs: FsLike, cwd: string): Promise<Buil
     return { output: 'cat: missing file operand', success: false };
   }
 
-  const filepath = resolvePath(args[0], cwd);
-  try {
-    const content = await fs.promises.readFile(filepath, 'utf8');
-    return { output: content as string, success: true };
-  } catch {
-    return { output: `cat: ${args[0]}: No such file or directory`, success: false };
+  const results: string[] = [];
+  for (const arg of args) {
+    const filepath = resolvePath(arg, cwd);
+    try {
+      const content = await fs.promises.readFile(filepath, 'utf8');
+      results.push(content as string);
+    } catch {
+      return { output: `cat: ${arg}: No such file or directory`, success: false };
+    }
   }
+  return { output: results.join(''), success: true };
 }
 
 async function mkdirCommand(args: string[], fs: FsLike, cwd: string): Promise<BuiltinResult> {
@@ -139,13 +143,26 @@ async function touchCommand(args: string[], fs: FsLike, cwd: string): Promise<Bu
   return { output: '', success: true };
 }
 
+/** Interpret backslash escape sequences like \n, \t, \\ */
+function interpretEscapes(str: string): string {
+  return str.replace(/\\n/g, '\n')
+    .replace(/\\t/g, '\t')
+    .replace(/\\r/g, '\r')
+    .replace(/\\\\/g, '\\');
+}
+
 async function echoCommand(args: string[], fs: FsLike, cwd: string): Promise<BuiltinResult> {
   const raw = args.join(' ');
 
-  // Handle redirect: echo "content" > file
-  const redirectMatch = raw.match(/^(.*?)\s*>\s*(.+)$/);
+  // Check for -e flag (interpret escape sequences)
+  const escapeFlag = raw.startsWith('-e ');
+  const content_raw = escapeFlag ? raw.slice(3) : raw;
+
+  // Handle redirect: echo [-e] "content" > file
+  const redirectMatch = content_raw.match(/^(.*?)\s*>\s*(.+)$/);
   if (redirectMatch) {
-    const content = redirectMatch[1].replace(/^["']|["']$/g, '');
+    let content = redirectMatch[1].replace(/^["']|["']$/g, '');
+    if (escapeFlag) content = interpretEscapes(content);
     const filepath = resolvePath(redirectMatch[2].trim(), cwd);
     try {
       await fs.promises.writeFile(filepath, content + '\n');
@@ -155,10 +172,11 @@ async function echoCommand(args: string[], fs: FsLike, cwd: string): Promise<Bui
     }
   }
 
-  // Handle append: echo "content" >> file
-  const appendMatch = raw.match(/^(.*?)\s*>>\s*(.+)$/);
+  // Handle append: echo [-e] "content" >> file
+  const appendMatch = content_raw.match(/^(.*?)\s*>>\s*(.+)$/);
   if (appendMatch) {
-    const content = appendMatch[1].replace(/^["']|["']$/g, '');
+    let content = appendMatch[1].replace(/^["']|["']$/g, '');
+    if (escapeFlag) content = interpretEscapes(content);
     const filepath = resolvePath(appendMatch[2].trim(), cwd);
     try {
       const existing = await fs.promises.readFile(filepath, 'utf8').catch(() => '');
@@ -169,7 +187,9 @@ async function echoCommand(args: string[], fs: FsLike, cwd: string): Promise<Bui
     }
   }
 
-  return { output: raw.replace(/^["']|["']$/g, ''), success: true };
+  let output = content_raw.replace(/^["']|["']$/g, '');
+  if (escapeFlag) output = interpretEscapes(output);
+  return { output, success: true };
 }
 
 async function rmCommand(args: string[], fs: FsLike, cwd: string): Promise<BuiltinResult> {

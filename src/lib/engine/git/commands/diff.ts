@@ -6,14 +6,23 @@ import { resolveRef, getFilesAtCommit } from '../ref-resolver.js';
 export async function diffCommand(args: string[], engine: GitEngine): Promise<CommandResult> {
   const staged = args.includes('--staged') || args.includes('--cached');
   const stat = args.includes('--stat');
+  const nameOnly = args.includes('--name-only');
+  const nameStatus = args.includes('--name-status');
 
   // Check for range diff: branch1..branch2 or branch1...branch2
   const rangeArg = args.find(a => !a.startsWith('-') && (a.includes('...') || a.includes('..')));
   if (rangeArg) {
+    if (nameOnly || nameStatus) {
+      return rangeDiffNames(rangeArg, engine, nameStatus);
+    }
     return rangeDiff(rangeArg, engine);
   }
 
   const matrix = await git.statusMatrix({ fs: engine.fs, dir: engine.dir });
+
+  if (nameOnly || nameStatus) {
+    return diffNames(matrix, staged, nameStatus);
+  }
 
   if (stat) {
     return diffStat(matrix, staged, engine);
@@ -90,6 +99,93 @@ export async function diffCommand(args: string[], engine: GitEngine): Promise<Co
 }
 
 type StatusMatrix = [string, number, number, number][];
+
+function diffNames(
+  matrix: StatusMatrix,
+  staged: boolean,
+  showStatus: boolean,
+): CommandResult {
+  const lines: string[] = [];
+
+  for (const [filepath, head, workdir, stage] of matrix) {
+    const hasChange = staged ? head !== stage : stage !== workdir;
+    if (!hasChange) continue;
+
+    if (showStatus) {
+      // Determine status letter
+      let status = 'M';
+      if (staged) {
+        if (head === 0) status = 'A';
+        else if (stage === 0) status = 'D';
+      } else {
+        if (stage === 0 && workdir === 0) status = 'D';
+        else if (head === 0 && stage === 0) status = 'A';
+      }
+      lines.push(`${status}\t${filepath}`);
+    } else {
+      lines.push(filepath);
+    }
+  }
+
+  return { output: lines.join('\n'), success: true };
+}
+
+async function rangeDiffNames(
+  rangeArg: string,
+  engine: GitEngine,
+  showStatus: boolean,
+): Promise<CommandResult> {
+  try {
+    const isThreeDot = rangeArg.includes('...');
+    const separator = isThreeDot ? '...' : '..';
+    const [leftRef, rightRef] = rangeArg.split(separator);
+
+    if (!leftRef || !rightRef) {
+      return { output: `fatal: invalid range '${rangeArg}'`, success: false };
+    }
+
+    let leftOid: string;
+    const rightOid = await resolveRef(rightRef, engine);
+
+    if (isThreeDot) {
+      const leftCommits = await git.log({ fs: engine.fs, dir: engine.dir, ref: leftRef });
+      const rightCommits = await git.log({ fs: engine.fs, dir: engine.dir, ref: rightRef });
+      const leftOids = new Set(leftCommits.map(c => c.oid));
+      const baseCommit = rightCommits.find(c => leftOids.has(c.oid));
+      if (!baseCommit) {
+        return { output: `fatal: no common ancestor between '${leftRef}' and '${rightRef}'`, success: false };
+      }
+      leftOid = baseCommit.oid;
+    } else {
+      leftOid = await resolveRef(leftRef, engine);
+    }
+
+    const leftFiles = await getFilesAtCommit(engine, leftOid);
+    const rightFiles = await getFilesAtCommit(engine, rightOid);
+    const allPaths = new Set([...leftFiles.keys(), ...rightFiles.keys()]);
+    const lines: string[] = [];
+
+    for (const filepath of [...allPaths].sort()) {
+      const oldContent = leftFiles.get(filepath);
+      const newContent = rightFiles.get(filepath);
+      if (oldContent === newContent) continue;
+
+      if (showStatus) {
+        let status = 'M';
+        if (oldContent === undefined) status = 'A';
+        else if (newContent === undefined) status = 'D';
+        lines.push(`${status}\t${filepath}`);
+      } else {
+        lines.push(filepath);
+      }
+    }
+
+    return { output: lines.join('\n'), success: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return { output: `fatal: ${msg}`, success: false };
+  }
+}
 
 async function diffStat(
   matrix: StatusMatrix,

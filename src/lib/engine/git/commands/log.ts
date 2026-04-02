@@ -30,6 +30,9 @@ export async function logCommand(args: string[], engine: GitEngine): Promise<Com
   const allBranches = args.includes('--all');
   const graph = args.includes('--graph');
   const showPatch = args.includes('-p') || args.includes('--patch');
+  const noMerges = args.includes('--no-merges');
+  const firstParent = args.includes('--first-parent');
+  const reverse = args.includes('--reverse');
   const depthIdx = args.indexOf('-n') !== -1 ? args.indexOf('-n') : args.indexOf('--max-count');
   const depth = depthIdx !== -1 ? parseInt(args[depthIdx + 1], 10) || 10 : 10;
 
@@ -87,7 +90,7 @@ export async function logCommand(args: string[], engine: GitEngine): Promise<Com
 
   // Parse ref argument: first non-flag arg that isn't a value for -n/--max-count/--author/--grep/--since/--until/--format
   const flagsWithValues = new Set(['-n', '--max-count', '--author', '--grep', '--since', '--until', '--format']);
-  const knownFlags = new Set(['--oneline', '--all', '--graph', '-p', '--patch', '-n', '--max-count', '--author', '--grep', '--since', '--until', '--format']);
+  const knownFlags = new Set(['--oneline', '--all', '--graph', '-p', '--patch', '-n', '--max-count', '--author', '--grep', '--since', '--until', '--format', '--no-merges', '--first-parent', '--reverse']);
   let refArg: string | null = null;
   for (let i = 0; i < args.length; i++) {
     if (flagsWithValues.has(args[i])) {
@@ -132,6 +135,29 @@ export async function logCommand(args: string[], engine: GitEngine): Promise<Com
       commits = await git.log(logOpts);
     }
 
+    // Apply --first-parent: re-walk following only first parent
+    if (firstParent && commits.length > 0) {
+      const firstParentCommits: typeof commits = [];
+      let current = commits[0];
+      firstParentCommits.push(current);
+      while (firstParentCommits.length < depth) {
+        const parentOid = current.commit.parent[0];
+        if (!parentOid) break;
+        try {
+          const parentLog = await git.log({ fs: engine.fs, dir: engine.dir, ref: parentOid, depth: 1 });
+          if (parentLog.length === 0) break;
+          current = parentLog[0];
+          firstParentCommits.push(current);
+        } catch { break; }
+      }
+      commits = firstParentCommits;
+    }
+
+    // Apply --no-merges: filter out merge commits (2+ parents)
+    if (noMerges) {
+      commits = commits.filter(c => c.commit.parent.length < 2);
+    }
+
     // Apply --author filter
     if (authorFilter) {
       commits = commits.filter(c =>
@@ -159,6 +185,11 @@ export async function logCommand(args: string[], engine: GitEngine): Promise<Com
 
     if (commits.length === 0) {
       return { output: 'fatal: your current branch does not have any commits yet', success: false };
+    }
+
+    // Apply --reverse: show oldest first
+    if (reverse) {
+      commits = commits.slice().reverse();
     }
 
     // Custom --format output

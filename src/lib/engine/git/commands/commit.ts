@@ -4,6 +4,7 @@ import type { CommandResult } from '../types.js';
 
 export async function commitCommand(args: string[], engine: GitEngine): Promise<CommandResult> {
   const isAmend = args.includes('--amend');
+  const allowEmpty = args.includes('--allow-empty');
 
   let message = '';
   const mIndex = args.indexOf('-m') !== -1 ? args.indexOf('-m') : args.indexOf('--message');
@@ -25,7 +26,7 @@ export async function commitCommand(args: string[], engine: GitEngine): Promise<
   // Check if there's anything staged
   const matrix = await git.statusMatrix({ fs: engine.fs, dir: engine.dir });
   const staged = matrix.filter(([, head, , stage]) => head !== stage);
-  if (staged.length === 0) {
+  if (staged.length === 0 && !allowEmpty) {
     return {
       output: 'nothing to commit, working tree clean',
       success: false,

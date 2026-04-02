@@ -362,13 +362,13 @@ export class ShellBridge {
 
   private static readonly GIT_FLAGS: Record<string, string[]> = {
     'add':      ['-u', '--update', '-A', '--all'],
-    'commit':   ['-m', '--message'],
-    'log':      ['--oneline', '--all', '--graph', '-p', '--patch', '-n', '--max-count', '--author', '--grep', '--since', '--until', '--format', '--pretty'],
+    'commit':   ['-m', '--message', '--allow-empty', '--amend'],
+    'log':      ['--oneline', '--all', '--graph', '-p', '--patch', '-n', '--max-count', '--author', '--grep', '--since', '--until', '--format', '--pretty', '--no-merges', '--first-parent', '--reverse'],
     'status':   ['-s', '--short'],
-    'diff':     ['--staged', '--cached', '--stat'],
+    'diff':     ['--staged', '--cached', '--stat', '--name-only', '--name-status'],
     'reset':    ['--soft', '--mixed', '--hard'],
     'checkout': ['-b'],
-    'branch':   ['-d', '-D', '--delete', '--force-delete', '-v', '--verbose'],
+    'branch':   ['-d', '-D', '--delete', '--force-delete', '-v', '--verbose', '-m', '--move', '--merged', '--no-merged'],
     'tag':      ['-a', '--annotate', '-d', '--delete', '-l', '--list', '-m', '--message'],
     'rm':       ['--cached', '-r', '--recursive'],
     'stash':    ['push', 'pop', 'apply', 'list', 'drop'],

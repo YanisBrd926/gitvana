@@ -5,6 +5,9 @@ import { resolveRef } from '../ref-resolver.js';
 
 export async function branchCommand(args: string[], engine: GitEngine): Promise<CommandResult> {
   const deleteFlag = args.includes('-d') || args.includes('-D') || args.includes('--delete') || args.includes('--force-delete');
+  const moveFlag = args.includes('-m') || args.includes('--move');
+  const mergedFlag = args.includes('--merged');
+  const noMergedFlag = args.includes('--no-merged');
 
   if (deleteFlag) {
     const name = args.filter((a) => !a.startsWith('-'))[0];
@@ -19,7 +22,54 @@ export async function branchCommand(args: string[], engine: GitEngine): Promise<
     return { output: `Deleted branch ${name}.`, success: true };
   }
 
+  // Rename branch: git branch -m old new
+  if (moveFlag) {
+    const nonFlagArgs = args.filter((a) => !a.startsWith('-'));
+    if (nonFlagArgs.length < 2) {
+      return { output: 'fatal: usage: git branch -m <old-name> <new-name>', success: false };
+    }
+    const oldName = nonFlagArgs[0];
+    const newName = nonFlagArgs[1];
+    try {
+      await git.renameBranch({ fs: engine.fs, dir: engine.dir, oldref: oldName, ref: newName });
+      return { output: '', success: true };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return { output: `error: ${msg}`, success: false };
+    }
+  }
+
   const verboseFlag = args.includes('-v') || args.includes('--verbose');
+
+  // --merged / --no-merged filtering
+  if (mergedFlag || noMergedFlag) {
+    const branches = await git.listBranches({ fs: engine.fs, dir: engine.dir });
+    const current = await git.currentBranch({ fs: engine.fs, dir: engine.dir });
+
+    // Get all commits reachable from HEAD
+    let headCommits: Set<string>;
+    try {
+      const logs = await git.log({ fs: engine.fs, dir: engine.dir });
+      headCommits = new Set(logs.map(c => c.oid));
+    } catch {
+      headCommits = new Set();
+    }
+
+    const lines: string[] = [];
+    for (const b of branches) {
+      try {
+        const tipOid = await git.resolveRef({ fs: engine.fs, dir: engine.dir, ref: b });
+        const isMerged = headCommits.has(tipOid);
+        if ((mergedFlag && isMerged) || (noMergedFlag && !isMerged)) {
+          const prefix = b === current ? '* ' : '  ';
+          lines.push(`${prefix}${b}`);
+        }
+      } catch {
+        // skip branches we can't resolve
+      }
+    }
+    return { output: lines.join('\n'), success: true };
+  }
 
   // No args (or only display flags): list branches
   const displayOnly = args.every(a => ['-a', '-v', '--verbose'].includes(a));
