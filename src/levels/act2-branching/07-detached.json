@@ -7,53 +7,159 @@
   "difficulty": "intermediate",
   "mode": "strict",
   "briefing": {
-    "narrative": "You wake up in the monastery infirmary. The nurse monk — who insists on being called 'Doctor' despite having no medical training whatsoever — is hovering over you.\n\n\"Bad news,\" she says. \"You've been checked out to an old commit. Your HEAD is detached. Don't panic — it's a git thing, not a medical thing.\"\n\nShe consults her clipboard. \"You're three commits behind the present. Any work you do here will be lost unless you create a branch to save it. Think of it as building a lifeboat in the middle of a time paradox.\"\n\nThe monastery cat is somehow in both the past and the present. Cats are weird like that.",
-    "concept": "When you checkout a specific commit (not a branch), you enter 'detached HEAD' state. You can look around and even make commits, but those commits aren't on any branch — they'll be lost when you switch away. To save your work, create a new branch with git checkout -b <name>, which anchors your commits to a branch name.",
+    "narrative": "You wake up in the monastery infirmary. The nurse monk \u2014 who insists on being called 'Doctor' despite having no medical training whatsoever \u2014 is hovering over you.\n\n\"Bad news,\" she says. \"You've been checked out to an old commit. Your HEAD is detached. Don't panic \u2014 it's a git thing, not a medical thing.\"\n\nShe consults her clipboard. \"You're three commits behind the present. Any work you do here will be lost unless you create a branch to save it. Think of it as building a lifeboat in the middle of a time paradox.\"\n\nThe monastery cat is somehow in both the past and the present. Cats are weird like that.",
+    "concept": "When you checkout a specific commit (not a branch), you enter 'detached HEAD' state. You can look around and even make commits, but those commits aren't on any branch \u2014 they'll be lost when you switch away. To save your work, create a new branch with git checkout -b <name>, which anchors your commits to a branch name.",
     "objectives": [
-      "You're in detached HEAD state — make a new commit here",
+      "You're in detached HEAD state \u2014 make a new commit here",
       "Create a branch called 'rescue' to save your work",
       "Ensure HEAD is on the 'rescue' branch"
     ],
-    "newCommands": ["git checkout <commit-hash>", "git checkout -b <name>"]
+    "newCommands": [
+      "git checkout <commit-hash>",
+      "git checkout -b <name>"
+    ]
   },
   "initialState": {
     "strategy": "replay",
     "replayScript": [
-      { "command": "init", "args": {} },
-      { "command": "writeFile", "args": { "path": "a.txt", "content": "v1" } },
-      { "command": "add", "args": { "path": "a.txt" } },
-      { "command": "commit", "args": { "message": "v1" } },
-      { "command": "writeFile", "args": { "path": "a.txt", "content": "v2" } },
-      { "command": "add", "args": { "path": "a.txt" } },
-      { "command": "commit", "args": { "message": "v2" } },
-      { "command": "writeFile", "args": { "path": "a.txt", "content": "v3" } },
-      { "command": "add", "args": { "path": "a.txt" } },
-      { "command": "commit", "args": { "message": "v3" } },
-      { "command": "writeFile", "args": { "path": "a.txt", "content": "v4" } },
-      { "command": "add", "args": { "path": "a.txt" } },
-      { "command": "commit", "args": { "message": "v4" } },
-      { "command": "writeFile", "args": { "path": "a.txt", "content": "v5" } },
-      { "command": "add", "args": { "path": "a.txt" } },
-      { "command": "commit", "args": { "message": "v5" } },
-      { "command": "checkout", "args": { "ref": "HEAD~3" } }
+      {
+        "command": "init",
+        "args": {}
+      },
+      {
+        "command": "writeFile",
+        "args": {
+          "path": "a.txt",
+          "content": "v1"
+        }
+      },
+      {
+        "command": "add",
+        "args": {
+          "path": "a.txt"
+        }
+      },
+      {
+        "command": "commit",
+        "args": {
+          "message": "v1"
+        }
+      },
+      {
+        "command": "writeFile",
+        "args": {
+          "path": "a.txt",
+          "content": "v2"
+        }
+      },
+      {
+        "command": "add",
+        "args": {
+          "path": "a.txt"
+        }
+      },
+      {
+        "command": "commit",
+        "args": {
+          "message": "v2"
+        }
+      },
+      {
+        "command": "writeFile",
+        "args": {
+          "path": "a.txt",
+          "content": "v3"
+        }
+      },
+      {
+        "command": "add",
+        "args": {
+          "path": "a.txt"
+        }
+      },
+      {
+        "command": "commit",
+        "args": {
+          "message": "v3"
+        }
+      },
+      {
+        "command": "writeFile",
+        "args": {
+          "path": "a.txt",
+          "content": "v4"
+        }
+      },
+      {
+        "command": "add",
+        "args": {
+          "path": "a.txt"
+        }
+      },
+      {
+        "command": "commit",
+        "args": {
+          "message": "v4"
+        }
+      },
+      {
+        "command": "writeFile",
+        "args": {
+          "path": "a.txt",
+          "content": "v5"
+        }
+      },
+      {
+        "command": "add",
+        "args": {
+          "path": "a.txt"
+        }
+      },
+      {
+        "command": "commit",
+        "args": {
+          "message": "v5"
+        }
+      },
+      {
+        "command": "checkout",
+        "args": {
+          "ref": "HEAD~3"
+        }
+      }
     ],
     "head": "main"
   },
   "targetState": {
     "validators": [
-      { "type": "branch-exists", "params": { "name": "rescue" } },
-      { "type": "head-at", "params": { "branch": "rescue" } },
-      { "type": "commit-count", "params": { "min": 3 } }
+      {
+        "type": "branch-exists",
+        "params": {
+          "name": "rescue"
+        }
+      },
+      {
+        "type": "head-at",
+        "params": {
+          "branch": "rescue"
+        }
+      },
+      {
+        "type": "commit-count",
+        "params": {
+          "min": 3
+        }
+      }
     ]
   },
   "constraints": {
-    "maxCommands": 8
+    "maxCommands": 10
   },
   "hints": [
     {
       "trigger": "after-attempts",
       "triggerValue": 3,
-      "text": "Doctor Monk checks her notes: 'You're in detached HEAD state. Make a commit — any commit. Then create a branch with git checkout -b rescue to anchor yourself.'",
+      "text": "Doctor Monk checks her notes: 'You're in detached HEAD state. Make a commit \u2014 any commit. Then create a branch with git checkout -b rescue to anchor yourself.'",
       "penalty": 0.25
     },
     {
@@ -70,7 +176,10 @@
   ],
   "rewards": {
     "stars": {
-      "maxCommands": { "two": 6, "three": 4 }
+      "maxCommands": {
+        "two": 7,
+        "three": 5
+      }
     },
     "achievement": "head-reattacher"
   }
