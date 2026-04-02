@@ -115,6 +115,48 @@ src/
 └── main.ts              # Entry point
 ```
 
+## Found a bug?
+
+```
+╔══════════════════════════════════════════╗
+║  The monks welcome bug reports.          ║
+║  Even the cat files issues sometimes.    ║
+╚══════════════════════════════════════════╝
+```
+
+**[→ Report an issue on GitHub](https://github.com/pixari/gitvana/issues/new)**
+
+Include:
+- Which level you were on
+- What you typed
+- What happened vs what you expected
+- Screenshot if possible
+
+## Contributing
+
+Gitvana is in **alpha** — contributions are welcome!
+
+**Quick wins:**
+- Fix a level validator (most bugs are in the JSON files in `src/levels/`)
+- Add a new level (copy an existing JSON, change the content)
+- Improve docs (`src/docs/commands/index.ts` and `src/docs/guides/index.ts`)
+- Fix a git command edge case (`src/lib/engine/git/commands/`)
+
+**Getting started:**
+```bash
+git clone https://github.com/pixari/gitvana.git
+cd gitvana
+bun install
+bun run dev          # Vite dev server on :5173
+bun run dev:server   # API server on :3000 (optional, for telemetry)
+bun test             # Run all 35 level tests
+```
+
+**Before submitting a PR:**
+- Run `bun test` — all 35 level tests must pass
+- Run `bun run build` — no build errors
+- If you changed a level, update the solution in `src/lib/engine/shell/solutions.ts`
+
 ## Credits
 
 Built by [Raffaele Pizzari](https://pixari.dev) ([@pixari](https://github.com/pixari))
