@@ -5,6 +5,10 @@
 <h1 align="center">Gitvana</h1>
 
 <p align="center">
+  <code>⚠️ ALPHA — Work in progress. Bugs, rough edges, and the occasional angry monk ahead. ⚠️</code>
+</p>
+
+<p align="center">
   <strong>Learn git by playing.</strong> A retro browser game where you type real git commands in a real terminal to solve puzzles at the Monastery of Version Control.
 </p>
 

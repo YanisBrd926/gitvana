@@ -22,6 +22,7 @@
 <nav class="navbar">
   <div class="navbar-inner">
     <a href="/" class="nav-logo" onclick={(e) => { e.preventDefault(); window.location.hash = ''; window.location.reload(); }}>GITVANA</a>
+    <span class="alpha-badge">ALPHA</span>
 
     <button class="hamburger" onclick={() => menuOpen = !menuOpen} aria-label="Toggle menu">
       {menuOpen ? '\u2715' : '\u2630'}
@@ -77,6 +78,24 @@
 
   .nav-logo:hover {
     text-shadow: 0 0 12px #ffa30066;
+  }
+
+  .alpha-badge {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: #ff004d;
+    background: #ff004d18;
+    border: 1px solid #ff004d44;
+    border-radius: 3px;
+    padding: 2px 6px;
+    letter-spacing: 2px;
+    animation: alpha-blink 2s ease-in-out infinite;
+    margin-left: -4px;
+  }
+
+  @keyframes alpha-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
   }
 
   .nav-links {
