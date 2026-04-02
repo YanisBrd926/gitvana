@@ -37,6 +37,7 @@
       let stars = 1;
       if (commandCount <= maxCmds.two) stars = 2;
       if (commandCount <= maxCmds.three) stars = 3;
+      eventBus.emit('level:completed', { levelId: level.id, stars });
       onComplete?.(stars);
     }
   }
