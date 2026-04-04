@@ -131,7 +131,7 @@
       <button class="header-btn icon-btn" onclick={toggleSound} title={soundEnabled ? 'Mute' : 'Unmute'}>
         {soundEnabled ? '🔊' : '🔇'}
       </button>
-      <button class="header-btn icon-btn" onclick={handleUndo} title="Undo last command">↶</button>
+      <button class="header-btn undo-btn" onclick={handleUndo} title="Undo last git command">↶ UNDO</button>
       <button class="header-btn icon-btn" onclick={() => onRestart?.()} title="Restart level">↺</button>
       <a class="header-btn" href="#/docs" title="Docs">DOCS</a>
       <a class="header-btn icon-btn coffee" href="https://buymeacoffee.com/pixari" target="_blank" rel="noopener noreferrer" title="Buy me a coffee">☕</a>
@@ -219,6 +219,21 @@
     color: #c2c3c7;
     border-color: #5f574f;
     background: #2a2a4e44;
+  }
+
+  .undo-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: #ffa300;
+    border-color: #ffa30044;
+    background: #ffa30011;
+    gap: 4px;
+  }
+
+  .undo-btn:hover {
+    color: #ffa300;
+    border-color: #ffa30088;
+    background: #ffa30022;
   }
 
   .icon-btn {
