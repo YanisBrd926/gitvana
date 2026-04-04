@@ -279,6 +279,7 @@ export class ShellBridge {
           break;
 
         case '\x0c': // Ctrl+L — clear screen
+          this.terminal.write('\x1b[2J\x1b[H');
           this.terminal.clear();
           this.writePrompt();
           this.terminal.write(this.lineBuffer);
@@ -646,6 +647,7 @@ export class ShellBridge {
 
       case 'builtin': {
         if (parsed.command === 'clear') {
+          this.terminal.write('\x1b[2J\x1b[H');
           this.terminal.clear();
         } else if (parsed.command === 'help') {
           this.writeLine(this.getHelpText());
