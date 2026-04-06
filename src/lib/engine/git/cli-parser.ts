@@ -38,7 +38,7 @@ export function parseCommand(input: string): ParsedCommand {
     };
   }
 
-  if (first === 'docs') {
+  if (first === 'docs' || first === 'man') {
     return {
       type: 'docs',
       command: 'docs',

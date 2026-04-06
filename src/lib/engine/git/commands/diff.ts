@@ -22,6 +22,23 @@ export async function diffCommand(args: string[], engine: GitEngine): Promise<Co
     return rangeDiff(rangeArg, engine);
   }
 
+  // git diff <ref1> <ref2> — compare two commits
+  if (nonFlagArgs.length >= 2) {
+    const syntheticRange = `${nonFlagArgs[0]}..${nonFlagArgs[1]}`;
+    if (nameOnly || nameStatus) {
+      return rangeDiffNames(syntheticRange, engine, nameStatus);
+    }
+    if (stat) {
+      return rangeDiff(syntheticRange, engine); // stat not implemented for range, fall back to full diff
+    }
+    return rangeDiff(syntheticRange, engine);
+  }
+
+  // git diff <ref> (single ref, not HEAD) — compare ref against working directory
+  if (nonFlagArgs.length === 1 && nonFlagArgs[0] !== 'HEAD') {
+    return diffRefVsWorkdir(nonFlagArgs[0], engine, stat, nameOnly, nameStatus);
+  }
+
   const matrix = await git.statusMatrix({ fs: engine.fs, dir: engine.dir });
 
   if (nameOnly || nameStatus) {
@@ -367,6 +384,63 @@ async function rangeDiff(rangeArg: string, engine: GitEngine): Promise<CommandRe
 
     if (lines.length === 0) {
       return { output: '', success: true };
+    }
+
+    return { output: lines.join('\n'), success: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return { output: `fatal: ${msg}`, success: false };
+  }
+}
+
+async function diffRefVsWorkdir(
+  ref: string,
+  engine: GitEngine,
+  stat: boolean,
+  nameOnly: boolean,
+  nameStatus: boolean,
+): Promise<CommandResult> {
+  try {
+    const refOid = await resolveRef(ref, engine);
+    const refFiles = await getFilesAtCommit(engine, refOid);
+
+    const workFiles = new Map<string, string>();
+    const matrix = await git.statusMatrix({ fs: engine.fs, dir: engine.dir });
+    for (const [filepath] of matrix) {
+      try {
+        const content = await engine.fs.promises.readFile(`${engine.dir}/${filepath}`, 'utf8') as string;
+        workFiles.set(filepath, content);
+      } catch { /* deleted */ }
+    }
+
+    const allPaths = new Set([...refFiles.keys(), ...workFiles.keys()]);
+    const lines: string[] = [];
+
+    for (const filepath of [...allPaths].sort()) {
+      const oldContent = refFiles.get(filepath) || '';
+      const newContent = workFiles.get(filepath) || '';
+      if (oldContent === newContent) continue;
+
+      if (nameOnly) { lines.push(filepath); continue; }
+      if (nameStatus) {
+        const s = !refFiles.has(filepath) ? 'A' : !workFiles.has(filepath) ? 'D' : 'M';
+        lines.push(`${s}\t${filepath}`);
+        continue;
+      }
+
+      lines.push(`diff --git a/${filepath} b/${filepath}`);
+      lines.push(refFiles.has(filepath) ? `--- a/${filepath}` : '--- /dev/null');
+      lines.push(workFiles.has(filepath) ? `+++ b/${filepath}` : '+++ /dev/null');
+
+      const oldLines = oldContent ? oldContent.split('\n') : [];
+      const newLines = newContent ? newContent.split('\n') : [];
+      if (oldLines.length > 0 && oldLines[oldLines.length - 1] === '') oldLines.pop();
+      if (newLines.length > 0 && newLines[newLines.length - 1] === '') newLines.pop();
+
+      lines.push(`@@ -1,${oldLines.length} +1,${newLines.length} @@`);
+      for (const l of oldLines) lines.push(`-${l}`);
+      for (const l of newLines) lines.push(`+${l}`);
+      lines.push('');
     }
 
     return { output: lines.join('\n'), success: true };

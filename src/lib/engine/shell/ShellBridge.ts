@@ -945,6 +945,14 @@ export class ShellBridge {
       const result = await runBuiltin(parsed.command, rawArgs, this.engine.fs, this.engine.dir);
       if (result.output) this.writeLine(result.output);
       return result.success;
+    } else if (parsed.type === 'edit') {
+      const filepath = parsed.args[0];
+      if (filepath && this.onEditRequest) {
+        this.onEditRequest(filepath);
+      } else {
+        this.writeLine('usage: edit <file>');
+      }
+      return !!filepath;
     }
     this.writeLine(`${parsed.command}: command not found`);
     return false;
