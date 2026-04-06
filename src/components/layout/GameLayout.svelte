@@ -83,4 +83,29 @@
   .hud-area {
     padding: 0 6px 6px;
   }
+
+  @media (max-width: 860px) {
+    .main-area {
+      flex-direction: column;
+    }
+
+    .terminal-panel {
+      flex: 3;
+      min-height: 200px;
+    }
+
+    .right-column {
+      flex: 2;
+      min-width: unset;
+      flex-direction: row;
+    }
+
+    .filestate-panel {
+      flex: 1;
+    }
+
+    .graph-panel {
+      flex: 1;
+    }
+  }
 </style>

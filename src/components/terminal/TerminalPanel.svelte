@@ -273,4 +273,15 @@
   .terminal-body :global(.xterm-viewport) {
     overflow-y: auto !important;
   }
+
+  @media (max-width: 860px) {
+    .header-actions {
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .terminal-header {
+      padding: 4px 8px;
+    }
+  }
 </style>

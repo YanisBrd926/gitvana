@@ -13,6 +13,12 @@
 
   const entries = [
     {
+      date: '2026-04-06',
+      title: 'Tablet Support',
+      tags: ['feature'],
+      content: 'Gitvana now works on tablets in landscape mode. Panels stack vertically on narrower screens. The mobile fallback only triggers on phone-sized viewports now.'
+    },
+    {
       date: '2026-04-04',
       title: 'Bug Fixes \u2014 Rebase, Diff, Commit',
       tags: ['fix', 'engine'],
