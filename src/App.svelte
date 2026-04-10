@@ -318,8 +318,8 @@
 
     {#snippet hudSlot()}
       <div style="display: flex; gap: 6px; align-items: stretch;">
-        <div style="flex: 3;"><ObjectivePanel level={currentLevel} onComplete={handleComplete} onDocRequest={handleDocRequest} /></div>
         <div style="flex: 1;"><MountainPath completedLevels={completedLevels} levelId={currentLevel.id} levelTitle={currentLevel.title} levelAct={currentLevel.act} levelOrder={currentLevel.order} {playerName} onNameChange={(name) => playerName = name} compact /></div>
+        <div style="flex: 1;"><ObjectivePanel level={currentLevel} onComplete={handleComplete} onDocRequest={handleDocRequest} /></div>
       </div>
     {/snippet}
   </GameLayout>

@@ -58,12 +58,12 @@
   }
 
   .terminal-panel {
-    flex: 3;
+    flex: 2;
   }
 
   .right-column {
     flex: 1;
-    min-width: 220px;
+    min-width: 280px;
     display: flex;
     flex-direction: column;
     gap: 6px;
